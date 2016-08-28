@@ -13,7 +13,14 @@ __email__ = "pydev.ar@gmail.com"
 from config import *
 
 # Constants to be defined.
-DEBUG = False  # Use for developers.
+USE_RASPBERRY = False
+CENTER_RADIUS = 30
+THRESHOLD = 10
+SHOW_CENTER_CIRCLE = True
+ENABLE_PHOTO = False
+ENABLE_VIDEO = False
+
+DEBUG = True  # Use for developers.
 SIZE = (640, 480)  # Camera resolution in (x, y)
 
 SHOW_IMAGE = True  # View the camera.
@@ -291,7 +298,7 @@ def check_quadrant(cx, cy):
         orden=orden+12
 
     if (orden != check_quadrant.anterior):   #test si transmite orden nueva
-        pepe=proxy.set_motores(orden,"Busca")        # mueve motores segun calculo anterior
+        pepe=0 #proxy.set_motores(orden,"Busca")        # mueve motores segun calculo anterior
         if pepe==2:
             check_quadrant.anterior=99
         else:
@@ -383,7 +390,7 @@ def camera_loop():
     Main Loop where the Image processing takes part.
     """
     global contour_appeared, contour_centered, record_video
-    camera, stream = set_up_camera()
+    #camera, stream = set_up_camera()
 
     # Global variables initialized.
     contour_appeared = False
@@ -392,11 +399,11 @@ def camera_loop():
     check_quadrant.anterior=0  # inicializa valor anterior de orden
 
     while True:
-        frame = capture_frame(camera, stream)
+        frame = cv2.imread("C:/Users/Dinesh/Desktop/gustavo/photos/small4.jpg");
         if frame is None:
             cv2.destroyAllWindows()
             break
-
+        """
         if CORRECT_VERTICAL_CAMERA:
             # To flip camera vertically (only when necessary)
             frame = cv2.flip(frame, 0)
@@ -404,7 +411,7 @@ def camera_loop():
         if CORRECT_HORIZONTAL_CAMERA:
             # To flip camera horizontally (only when necessary)
             frame = cv2.flip(frame, 1)
-
+        """
         original = frame.copy()
         # Shows current frame
         # cv2.imshow("original", original)
@@ -442,13 +449,14 @@ def camera_loop():
             lst = list()
             lst.append((frame, "frame"))
             show_images(lst, SIZE)
-        # cv2.imshow("frame", frame)
+        cv2.imshow("frame", frame)
 
         if wait_key() == "break":
             break
         # reset the stream before the next capture
-        stream.seek(0)
-        stream.truncate()
+        #stream.seek(0)
+        #stream.truncate()
+        #time.sleep(10);
     cv2.destroyAllWindows()
 
 
@@ -471,8 +479,9 @@ def fun():
     This function doesn't need to be used in the main loop.
     """
     set_up_leds()
-    sequence_test()
-    camera_test()
+    #sequence_test()
+    #camera_test()
+    camera_loop()
 
     # when code ends, the GPIO is freed...
     GPIO.cleanup()
