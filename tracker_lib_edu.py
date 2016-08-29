@@ -399,7 +399,7 @@ def camera_loop():
     check_quadrant.anterior=0  # inicializa valor anterior de orden
 
     while True:
-        frame = cv2.imread("C:/Users/Dinesh/Desktop/gustavo/photos/small4.jpg");
+        frame = cv2.imread("photos/small4.jpg");
         if frame is None:
             cv2.destroyAllWindows()
             break
