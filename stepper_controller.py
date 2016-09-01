@@ -1,0 +1,24 @@
+import RPi.GPIO as GPIO
+import time
+
+AZIMUT_DIRECTION_GPIO = 38
+AZIMUT_PUSLE_GPIO = 40
+AZIMUT_MICROSTEPS = 400
+AZIMUT_GEAR_RATIO = 48
+AZIMUT_SPEED = 1 / 1000.0
+
+# Initialization
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(AZIMUT_DIRECTION_GPIO, GPIO.OUT)
+GPIO.setup(AZIMUT_PUSLE_GPIO, GPIO.OUT)
+GPIO.output(AZIMUT_PUSLE_GPIO, False)
+
+GPIO.output(AZIMUT_DIRECTION_GPIO, False)
+time.sleep(AZIMUT_SPEED)
+
+for i in range(0, AZIMUT_MICROSTEPS * AZIMUT_GEAR_RATIO):
+  print 'pulse ' + str(i)
+  GPIO.output(AZIMUT_PUSLE_GPIO, True)
+  time.sleep(AZIMUT_SPEED)
+  GPIO.output(AZIMUT_PUSLE_GPIO, False)
+  time.sleep(AZIMUT_SPEED)
