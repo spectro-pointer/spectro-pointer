@@ -1,8 +1,9 @@
 import RPi.GPIO as GPIO
 import time
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class Stepper:
-    GPIO_SLEEP = 0.25 / 1000.0
+    GPIO_SLEEP = 0.5 / 1000.0
 
     def __init__(self, total_steps, direction_gpio, pulse_gpio):
         self.__total_steps = total_steps
@@ -64,20 +65,38 @@ class AzimuthStepper:
         while self.is_home():
             self.__stepper.pulse(self.AZIMUTH_HOMING_DIRECTION)
             steps += 1
-            if (steps > self.__stepper.total_steps()):
+            if (steps > self.total_steps()):
                 raise ValueError("Cannot home the azimuth stepper. It is likely not moving or the sensor is broken.")
         while not self.is_home():
             self.__stepper.pulse(self.AZIMUTH_HOMING_DIRECTION)
             steps += 1
-            if (steps > self.__stepper.total_steps()):
+            if (steps > self.total_steps()):
                 raise ValueError("Cannot home the azimuth stepper. It is likely not moving or the sensor is broken.")
         self.__stepper.reset_position()
 
     def is_home(self):
         return not GPIO.input(self.AZIMUTH_HOME_GPIO)
 
+    def position(self):
+        return self.__stepper.position()
+
+    def total_steps(self):
+        return self.__stepper.total_steps()
+
+    def move(self, direction, steps):
+        return self.__stepper.move(direction, steps)
+
 # Initialization
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
+print 'Initializing and homing the azmith stepper...'
 azimuth = AzimuthStepper()
+
+print 'Initializing the XML-RPC server...'
+server = SimpleXMLRPCServer(("0.0.0.0", 8000))
+server.register_instance(azimuth)
+
+print 'Waiting for incoming requests...'
+
+server.serve_forever()
