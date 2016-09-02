@@ -90,7 +90,7 @@ class AzimuthStepper:
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
-print 'Initializing and homing the azmith stepper...'
+print 'Initializing and homing the azimuth stepper...'
 azimuth = AzimuthStepper()
 
 print 'Initializing the XML-RPC server...'
