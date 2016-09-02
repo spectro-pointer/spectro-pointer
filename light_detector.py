@@ -3,6 +3,7 @@ import sys
 
 MIN_BRIGHTNESS_THRESHOLD = 150
 MIN_LIGHT_AREA = 15
+MAX_LIGHT_AREA = 500
 
 if len(sys.argv) != 2:
   print "Expected 1 argument: The photo to analyze"
@@ -17,7 +18,7 @@ lights = []
 for contour in contours:
   m = cv2.moments(contour)
   area = m["m00"]
-  if (area >= MIN_LIGHT_AREA):
+  if (area >= MIN_LIGHT_AREA and area <= MAX_LIGHT_AREA):
     x = int(m["m10"] / m["m00"])
     y = int(m["m01"] / m["m00"])
     lights.append({"x": x, "y": y, "area": area, "contour": contour})
