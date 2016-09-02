@@ -84,7 +84,7 @@ class AzimuthStepper:
         return self.__stepper.total_steps()
 
     def move(self, direction, steps):
-        return self.__stepper.move(direction, steps)
+        self.__stepper.move(direction, steps)
 
 # Initialization
 GPIO.setmode(GPIO.BOARD)
