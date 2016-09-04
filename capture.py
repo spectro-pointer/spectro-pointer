@@ -1,5 +1,9 @@
 import cv2
 import xmlrpclib
+import time
+
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 
 class LightDetector:
   MIN_BRIGHTNESS_THRESHOLD = 150
@@ -23,17 +27,34 @@ class LightDetector:
 
     return lights
 
+def capture_frame(camera, stream):
+    """
+    Captures Current Frame
+    This function should be called inside a loop.
+    :returns: frame"""
+    stream.seek(0)
+    stream.truncate()
+    frame = None
+    try:
+        camera.capture(stream, format='bgr', use_video_port=True)
+        frame = stream.array
+    except:
+        print "Error with camera.capture"
+    return frame
 
-camera = cv2.VideoCapture(0)
-camera.set(3, 640)
-camera.set(4, 480)
+SIZE = (640, 480)
+
+camera = PiCamera()
+camera.resolution = SIZE
+stream = PiRGBArray(camera, size=SIZE)
+time.sleep(0.1)  # allow the camera to warmup
+
 detector = LightDetector()
 s = xmlrpclib.ServerProxy('http://192.168.0.100:8000', allow_none = True)
 print "Position: " + str(s.position())
 
 while True:
-  _, im = camera.read()
-
+  im = capture_frame(camera, stream)
   lights = detector.detect(im)
 
   cv2.drawContours(im, [light["contour"] for light in lights], -1, (0, 255, 0))
@@ -41,14 +62,15 @@ while True:
     cv2.circle(im, (light["x"], light["y"]), 15, (0, 0, 255))
 
   if len(lights) == 1:
-    if lights[0]["x"] < 320:
-      print "Light is on the left"
+    x = lights[0]["x"]
+    if x < 320:
+      print "Light is on the left @ " + str(x)
       s.move(True, 50)
+      print "New position: " + str(s.position())
     else:
-      print "Light is on the right"
+      print "Light is on the right @ " + str(x)
       s.move(False, 50)
-
-  print "New position: " + str(s.position())
+      print "New position: " + str(s.position())
 
   cv2.imshow("live", im)
-  cv2.waitKey(500)
+  cv2.waitKey(100)
