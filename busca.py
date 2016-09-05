@@ -7,7 +7,7 @@ from camera import Camera
 
 camera = Camera()
 detector = LightDetector()
-s = xmlrpclib.ServerProxy('http://192.168.0.100:8000', allow_none = True)
+s = xmlrpclib.ServerProxy('http://192.168.0.100:8000')
 print "Position: " + str(s.position())
 
 while True:
