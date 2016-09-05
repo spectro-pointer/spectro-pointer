@@ -5,7 +5,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 class ElevationController:
     DIRECTION_GPIO = 36
     PULSE_GPIO = 32
-    # There is ~150 degrees between the two home sensors
+    # There are ~150 degrees between the two home sensors
     HOME_DOWN_GPIO = 24
     HOME_UP_GPIO = 26
     MICROSTEPS = 400
