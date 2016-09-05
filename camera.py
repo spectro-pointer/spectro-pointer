@@ -13,6 +13,6 @@ class Camera:
         self.stream.seek(0)
         self.stream.truncate()
 
-        self.camera.capture(stream, format = 'bgr', use_video_port = True)
+        self.camera.capture(self.stream, format = 'bgr', use_video_port = True)
 
         return stream.array
