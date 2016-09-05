@@ -15,4 +15,4 @@ class Camera:
 
         self.camera.capture(self.stream, format = 'bgr', use_video_port = True)
 
-        return stream.array
+        return self.stream.array
