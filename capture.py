@@ -8,7 +8,6 @@ from picamera import PiCamera
 class LightDetector:
   MIN_BRIGHTNESS_THRESHOLD = 150
   MIN_LIGHT_AREA = 150
-  MAX_LIGHT_AREA = 5000
 
   def detect(self, frame):
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -20,7 +19,7 @@ class LightDetector:
     for contour in contours:
       m = cv2.moments(contour)
       area = m["m00"]
-      if (area >= self.MIN_LIGHT_AREA and area <= self.MAX_LIGHT_AREA):
+      if area >= self.MIN_LIGHT_AREA:
         x = int(m["m10"] / m["m00"])
         y = int(m["m01"] / m["m00"])
         lights.append({"x": x, "y": y, "area": area, "contour": contour})
