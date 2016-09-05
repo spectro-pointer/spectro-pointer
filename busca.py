@@ -24,7 +24,9 @@ while True:
         x = lights[0]["x"]
         e = x - 320
 
-        if (abs(e) < 10):
+        if (abs(e) < 3):
+            steps = 1
+        elif (abs(e) < 10):
             steps = 5
         elif (abs(e) < 15):
             steps = 10
@@ -37,11 +39,11 @@ while True:
         else:
             steps = 500
 
-        if e < -3:
+        if e < -1:
             print "Light is on the left @ " + str(x) + " & error = " + str(e)
             s.move(True, steps)
             print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
-        elif e > 3:
+        elif e > 1:
             print "Light is on the right @ " + str(x) + " & error = " + str(e)
             s.move(False, steps)
             print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
