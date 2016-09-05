@@ -11,7 +11,7 @@ class ElevationController:
     MICROSTEPS = 400
     GEAR_RATIO = 48
     DOWN_DIRECTION = True
-    UP_DIRECTION = not ElevationController.DOWN_DIRECTION
+    UP_DIRECTION = not DOWN_DIRECTION
 
     def __init__(self):
         GPIO.setup(self.HOME_DOWN_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
