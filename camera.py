@@ -9,7 +9,7 @@ class Camera:
         camera.resolution = self.SIZE
         stream = PiRGBArray(camera, size = self.SIZE)
 
-    def capture_frame():
+    def capture_frame(self):
         stream.seek(0)
         stream.truncate()
 
