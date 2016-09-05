@@ -1,55 +1,8 @@
 import RPi.GPIO as GPIO
-import time
+import stepper
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-class Stepper:
-    GPIO_SLEEP = 0.5 / 1000.0
-
-    def __init__(self, total_steps, direction_gpio, pulse_gpio):
-        self.__total_steps = total_steps
-        self.__direction_gpio = direction_gpio
-        self.__pulse_gpio = pulse_gpio
-        self.__position = 0
-        self.__last_direction = True
-
-        GPIO.setup(self.__direction_gpio, GPIO.OUT)
-        GPIO.setup(self.__pulse_gpio, GPIO.OUT)
-
-        GPIO.output(self.__direction_gpio, self.__last_direction)
-        GPIO.output(self.__pulse_gpio, True)
-        time.sleep(self.GPIO_SLEEP)
-
-    def reset_position(self):
-        self.__position = 0
-
-    def position(self):
-        return self.__position
-
-    def total_steps(self):
-        return self.__total_steps
-
-    def move(self, direction, steps):
-        for i in range(0, steps):
-            self.pulse(direction)
-
-    def pulse(self, direction):
-        if (self.__last_direction != direction):
-            GPIO.output(self.__direction_gpio, direction)
-            time.sleep(self.GPIO_SLEEP)
-            self.__last_direction = direction
-
-        GPIO.output(self.__pulse_gpio, False)
-        time.sleep(self.GPIO_SLEEP)
-        GPIO.output(self.__pulse_gpio, True)
-        time.sleep(self.GPIO_SLEEP)
-
-        if direction:
-          self.__position += 1
-        else:
-          self.__position -= 1
-        self.__position %= self.__total_steps
-
-class AzimuthStepper:
+class AzimuthController:
     AZIMUTH_DIRECTION_GPIO = 38
     AZIMUTH_PULSE_GPIO = 40
     AZIMUTH_HOME_GPIO = 22
@@ -90,12 +43,12 @@ class AzimuthStepper:
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
-print 'Initializing and homing the azimuth stepper...'
-azimuth = AzimuthStepper()
+print 'Initializing and homing the azimuth controller...'
+azimuth_controller = AzimuthController()
 
 print 'Initializing the XML-RPC server...'
 server = SimpleXMLRPCServer(("0.0.0.0", 8000))
-server.register_instance(azimuth)
+server.register_instance(azimuth_controller)
 
 print 'Waiting for incoming requests...'
 
