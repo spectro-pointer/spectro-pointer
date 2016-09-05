@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 from stepper import Stepper
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-class AzimuthController:
+class ElevationController:
     DIRECTION_GPIO = 36
     PULSE_GPIO = 32
     HOME1_GPIO = 24
