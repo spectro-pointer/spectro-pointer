@@ -57,6 +57,7 @@ class ElevationController:
 
     def move(self, direction, steps):
         self.__stepper.move(direction, steps)
+        return True
 
 # Initialization
 GPIO.setmode(GPIO.BOARD)
