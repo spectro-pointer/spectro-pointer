@@ -16,8 +16,8 @@ class ElevationController:
         GPIO.setup(self.HOME2_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
         self.__stepper = Stepper(self.MICROSTEPS * self.GEAR_RATIO, self.DIRECTION_GPIO, self.PULSE_GPIO)
 
-        print '1st home: ' + str(is_home1())
-        print '2nd home: ' + str(is_home2())
+        print '1st home: ' + str(self.is_home1())
+        print '2nd home: ' + str(self.is_home2())
 
         raise ValueError("nooooo")
 
