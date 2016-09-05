@@ -63,14 +63,31 @@ while True:
 
   if len(lights) == 1:
     x = lights[0]["x"]
-    if x < 320:
-      print "Light is on the left @ " + str(x)
-      s.move(True, 50)
-      print "New position: " + str(s.position())
+    e = x - 320
+
+    if (abs(e) < 10):
+      steps = 5
+    elif (abs(e) < 15):
+      steps = 10
+    elif (abs(e) < 20):
+      steps = 20
+    elif (abs(e) < 50):
+      steps = 50
+    elif (abs(e) < 100):
+      steps = 100
     else:
-      print "Light is on the right @ " + str(x)
-      s.move(False, 50)
-      print "New position: " + str(s.position())
+      steps = 500
+
+    if e < -3:
+      print "Light is on the left @ " + str(x) + " & error = " + str(e)
+      s.move(True, steps)
+      print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
+    elif e > 3:
+      print "Light is on the right @ " + str(x) + " & error = " + str(e)
+      s.move(False, steps)
+      print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
+    else:
+      print "Light is centered! @ " + str(x) + " & error = " + str(e)
 
   cv2.imshow("live", im)
   cv2.waitKey(100)
