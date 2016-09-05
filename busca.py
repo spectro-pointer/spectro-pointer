@@ -2,8 +2,8 @@ import cv2
 import xmlrpclib
 import time
 
-import light_detector
-import camera
+from light_detector import LightDetector
+from camera import Camera
 
 camera = Camera()
 detector = LightDetector()

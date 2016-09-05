@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import stepper
+from stepper import Stepper
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class AzimuthController:
