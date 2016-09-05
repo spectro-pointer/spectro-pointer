@@ -6,8 +6,8 @@ class Camera:
 
     def __init__(self):
         camera = PiCamera()
-        camera.resolution = SIZE
-        stream = PiRGBArray(camera, size = SIZE)
+        camera.resolution = self.SIZE
+        stream = PiRGBArray(camera, size = self.SIZE)
 
     def capture_frame():
         stream.seek(0)
