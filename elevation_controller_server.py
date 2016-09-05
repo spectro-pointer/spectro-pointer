@@ -16,6 +16,11 @@ class ElevationController:
         GPIO.setup(self.HOME2_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
         self.__stepper = Stepper(self.MICROSTEPS * self.GEAR_RATIO, self.DIRECTION_GPIO, self.PULSE_GPIO)
 
+        print '1st home: ' + str(is_home1())
+        print '2nd home: ' + str(is_home2())
+
+        raise ValueError("nooooo")
+
         steps = 0
         while self.is_home():
             self.__stepper.pulse(self.HOMING_DIRECTION)
@@ -55,7 +60,7 @@ print 'Initializing and homing the elevation controller...'
 controller = ElevationController()
 
 print 'Initializing the XML-RPC server...'
-server = SimpleXMLRPCServer(("0.0.0.0", 8001))
+server = SimpleXMLRPCServer(("0.0.0.0", 8002))
 server.register_instance(controller)
 
 print 'Waiting for incoming requests...'
