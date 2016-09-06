@@ -10,8 +10,8 @@ detector = LightDetector()
 azimuth_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8000')
 elevation_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8001')
 
-for elevation in range(0.25 / 2, 100, 0.25):
-    elevation_controller.move_to(elevation)
+for elevation in range(0, 4):
+    elevation_controller.move_to(elevation*0.25 + 0.125)
     for azimuth in range(0, azimuth_controller.total_steps(), 480):
         azimuth_controller.move(True, 480)
         print "Azimuth: " + str(azimuth_controller.position()) + " Elevation: " + str(elevation_controller.position())
