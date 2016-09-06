@@ -22,12 +22,12 @@ class ElevationController:
         while self.is_home_up():
             self.__stepper.pulse(self.DOWN_DIRECTION)
             steps += 1
-            if (steps > self.total_steps()):
+            if (steps > self.__stepper.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
         while not self.is_home_up():
             self.__stepper.pulse(self.UP_DIRECTION)
             steps += 1
-            if (steps > self.total_steps()):
+            if (steps > self.__stepper.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
 
         steps = 0
@@ -36,7 +36,7 @@ class ElevationController:
             self.__stepper.pulse(self.DOWN_DIRECTION)
             steps += 1
             self.__amplitude += 1
-            if (steps > self.total_steps()):
+            if (steps > self.__stepper.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
         self.__stepper.reset_position()
 
