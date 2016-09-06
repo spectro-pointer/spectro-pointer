@@ -52,7 +52,7 @@ class ElevationController:
     def position(self):
         return float(abs(self.__stepper.position())) / self.amplitude()
 
-    def amplitude():
+    def amplitude(self):
         return self.__amplitude
 
     def move_to(self, percentage_amplitude):
