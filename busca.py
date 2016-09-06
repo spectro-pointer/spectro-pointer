@@ -7,8 +7,16 @@ from camera import Camera
 
 camera = Camera()
 detector = LightDetector()
-s = xmlrpclib.ServerProxy('http://192.168.0.100:8000')
-print "Position: " + str(s.position())
+azimuth_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8000')
+elevation_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8001')
+print "Azimuth: " + str(s.position())
+
+for elevation in range(0.25 / 2, 100, 0.25):
+    elevation_controller.move_to(elevation)
+    for azimuth in range(0, azimuth_controller.total_steps(), 480):
+        azimuth_controller.move(True, 480)
+
+quit()
 
 while True:
     im = camera.capture_frame()
@@ -41,12 +49,12 @@ while True:
 
         if e < -1:
             print "Light is on the left @ " + str(x) + " & error = " + str(e)
-            s.move(True, steps)
-            print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
+            azimuth_controller.move(True, steps)
+            print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
         elif e > 1:
             print "Light is on the right @ " + str(x) + " & error = " + str(e)
-            s.move(False, steps)
-            print "New position: " + str(s.position()) + ", moved by " + str(steps) + " steps"
+            azimuth_controller.move(False, steps)
+            print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
         else:
             print "Light is centered! @ " + str(x) + " & error = " + str(e)
 
