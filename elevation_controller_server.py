@@ -19,21 +19,21 @@ class ElevationController:
         self.__stepper = Stepper(self.MICROSTEPS * self.GEAR_RATIO, self.DIRECTION_GPIO, self.PULSE_GPIO)
 
         steps = 0
-        while self.is_home_up():
-            self.__stepper.pulse(self.DOWN_DIRECTION)
+        while self.is_home_down():
+            self.__stepper.pulse(self.UP_DIRECTION)
             steps += 1
             if (steps > self.__stepper.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
-        while not self.is_home_up():
-            self.__stepper.pulse(self.UP_DIRECTION)
+        while not self.is_home_down():
+            self.__stepper.pulse(self.DOWN_DIRECTION)
             steps += 1
             if (steps > self.__stepper.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
 
         steps = 0
         self.__amplitude = 0
-        while not self.is_home_down():
-            self.__stepper.pulse(self.DOWN_DIRECTION)
+        while not self.is_home_up():
+            self.__stepper.pulse(self.UP_DIRECTION)
             steps += 1
             self.__amplitude += 1
             if (steps > self.__stepper.total_steps()):
@@ -50,14 +50,19 @@ class ElevationController:
         return not GPIO.input(self.HOME_UP_GPIO)
 
     def position(self):
-        return float(abs(self.__stepper.position())) / self.amplitude()
+        position = float(self.__stepper.position()) / self.amplitude()
+        if position < 0 or position > 1:
+            raise ValueError("Invalid position about to be returned: " + position)
+        return position
 
     def amplitude(self):
         return self.__amplitude
 
     def move_to(self, percentage_amplitude):
-        steps = int(percentage_amplitude * self.amplitude()) - self.__stepper.position()
-        direction = self.DOWN_DIRECTION if steps < 0 else self.UP_DIRECTION
+        if percentage_amplitude < 0 or percentage_amplitude > 1:
+            raise ValueError("Percentage of amplitude must be between 0 and 1: " + str(percentage_amplitude))
+        steps = (percentage_amplitude - self.position()) * self.amplitude()
+        direction = self.UP_DIRECTION if steps < 0 else self.DOWN_DIRECTION
         self.__stepper.move(direction, abs(steps))
         return True
 
