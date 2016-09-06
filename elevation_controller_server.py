@@ -29,16 +29,16 @@ class ElevationController:
             steps += 1
             if (steps > self.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
-        self.__stepper.reset_position()
 
         steps = 0
-        self.amplitude = 0
+        self.__amplitude = 0
         while not self.is_home_down():
             self.__stepper.pulse(self.DOWN_DIRECTION)
             steps += 1
-            self.amplitude += 1
+            self.__amplitude += 1
             if (steps > self.total_steps()):
                 raise ValueError("Cannot home the elevation stepper. It is likely not moving or the sensor is broken.")
+        self.__stepper.reset_position()
 
     def is_home(self):
         return self.is_home_down() or self.is_home_up()
@@ -50,13 +50,15 @@ class ElevationController:
         return not GPIO.input(self.HOME_UP_GPIO)
 
     def position(self):
-        return self.__stepper.position()
+        return float(abs(self.__stepper.position())) / self.amplitude()
 
-    def total_steps(self):
-        return self.__stepper.total_steps()
+    def amplitude():
+        return self.__amplitude
 
-    def move(self, direction, steps):
-        self.__stepper.move(direction, steps)
+    def move_to(self, percentage_amplitude):
+        steps = int(percentage_amplitude * self.amplitude()) - self.__stepper.position()
+        direction = self.DOWN_DIRECTION if steps < 0 else self.UP_DIRECTION
+        self.__stepper.move(direction, abs(steps))
         return True
 
 # Initialization
@@ -67,7 +69,7 @@ print 'Initializing and homing the elevation controller...'
 controller = ElevationController()
 
 print 'Initializing the XML-RPC server...'
-server = SimpleXMLRPCServer(("0.0.0.0", 8002))
+server = SimpleXMLRPCServer(("0.0.0.0", 8001))
 server.register_instance(controller)
 
 print 'Waiting for incoming requests...'
