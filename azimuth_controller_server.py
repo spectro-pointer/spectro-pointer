@@ -40,9 +40,9 @@ class AzimuthController:
         self.__stepper.move(direction, steps)
         return True
 
-    def move_to(self, steps):
-        while self.position() != steps:
-            self.move(self, self.HOMING_DIRECTION, 1)
+    def move_to(self, position):
+        while self.position() != position:
+            self.move(self.HOMING_DIRECTION, 1)
         return True
 
 # Initialization
