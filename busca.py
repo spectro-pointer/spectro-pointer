@@ -72,7 +72,7 @@ def process():
                 light_state = tracker.get(light)
                 if light_state != None and not light_state.tracked:
                     light_to_follow = light
-                    light.in_tracking = True
+                    light_state.in_tracking = True
                     break
         print "Newly tracking: " + str(light_to_follow)
 
@@ -84,8 +84,9 @@ def process():
         x = light_to_follow.x
         e = x - 320
         if abs(e) <= 10:
-            light_to_follow.in_tracking = False
-            light_to_follow.tracked = True
+            light_state = tracker.get(light_to_follow)
+            light_state.in_tracking = False
+            light_state.tracked = True
             continue
 
         # Get closer to the light's center
