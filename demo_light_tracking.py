@@ -22,5 +22,6 @@ for light in lights:
     color = tracker.get(light)
     if color != None:
         cv2.circle(im, (light.x, light.y), 15, color, 3)
+
 cv2.imshow("demo", im)
 cv2.waitKey()
