@@ -100,8 +100,9 @@ def process():
         for light in lights:
             light_state = tracker.get(light)
             if light_state != None:
-                thickness = 7 if light_state.is_in_tracking else 3
-                cv2.circle(im, (light.x, light.y), 15, light_state.color, thickness)
+                thickness = 7 if light_state.in_tracking else 3
+                color = (0, 0, 255) if light_state.in_tracking else light_state.color
+                cv2.circle(im, (light.x, light.y), 15, color, thickness)
 
         cv2.imshow("busca", im)
         cv2.waitKey(100)
