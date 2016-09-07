@@ -81,7 +81,7 @@ def process():
         # Are we done tracking the current light
         x = light_to_follow.x
         e = x - 320
-        if abs(e) <= 5:
+        if abs(e) <= 10:
             light_to_follow.in_tracking = False
             light_to_follow.tracked = True
             continue
