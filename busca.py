@@ -86,7 +86,7 @@ def process():
             continue
 
         # Get closer to the light's center
-        steps = 20
+        steps = 10
         if e < -1:
             print "Light is on the left @ " + str(x) + " & error = " + str(e)
             azimuth_controller.move(True, steps)
