@@ -5,13 +5,16 @@ import time
 from light_detector import LightDetector
 from camera import Camera
 
-camera = Camera()
-detector = LightDetector()
-azimuth_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8000')
-elevation_controller = xmlrpclib.ServerProxy('http://192.168.0.100:8001')
+MOTORES_IP = '192.168.0.100'
+ELEVATION_STEPS = 4
 
-for elevation in range(0, 4):
-    elevation_controller.move_to(elevation*0.25 + 0.125)
+#camera = Camera()
+detector = LightDetector()
+azimuth_controller = xmlrpclib.ServerProxy('http://' + MOTORES_IP + ':8000')
+elevation_controller = xmlrpclib.ServerProxy('http://' + MOTORES_IP + ':8001')
+
+for elevation in range(0, ELEVATION_STEPS):
+    elevation_controller.move_to(elevation*(1.0 / ELEVATION_STEPS) + (1.0 / ELEVATION_STEPS) / 2.0)
     for azimuth in range(0, azimuth_controller.total_steps(), 480):
         azimuth_controller.move(True, 480)
         print "Azimuth: " + str(azimuth_controller.position()) + " Elevation: " + str(elevation_controller.position())
