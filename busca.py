@@ -2,7 +2,7 @@ import cv2
 import xmlrpclib
 import time
 
-from light_detector import LightDetector
+from lights import *
 from camera import Camera
 
 MOTORES_IP = '192.168.0.100'
@@ -25,14 +25,13 @@ while True:
     im = camera.capture_frame()
     lights = detector.detect(im)
 
-    cv2.drawContours(im, [light["contour"] for light in lights], -1, (0, 255, 0))
     for light in lights:
-        cv2.circle(im, (light["x"], light["y"]), 15, (0, 0, 255))
+        cv2.circle(im, (light.x, light.y), 15, (0, 0, 255))
 
         if len(lights) != 1:
             continue
 
-        x = lights[0]["x"]
+        x = lights[0].x
         e = x - 320
 
         if (abs(e) < 3):
