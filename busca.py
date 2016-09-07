@@ -64,6 +64,7 @@ def process():
             if light_state != None and light_state.in_tracking:
                 light_to_follow = light
                 break
+        print "Currently tracking: " + str(light_to_follow)
 
         # If none, find a next light to track
         if light_to_follow == None:
@@ -73,6 +74,7 @@ def process():
                     light_to_follow = light
                     light.in_tracking = True
                     break
+        print "Newly tracking: " + str(light_to_follow)
 
         # If still none, we are done with this part of the scan
         if light_to_follow == None:
