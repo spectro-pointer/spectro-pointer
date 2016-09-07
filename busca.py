@@ -30,6 +30,11 @@ def process():
     tracker = LightTracker()
     tracker.track(lights)
 
+    if len(lights) == 0:
+        print "No lights detects"
+        cv2.imshow("busca", im)
+        cv2.waitKey(100)
+
     for light in lights:
         if is_in_range(light):
             color = (randint(100, 255), randint(100, 255), randint(100, 255))
@@ -87,8 +92,8 @@ def process():
                 thickness = 7 if light.is_in_tracking else 3
                 cv2.circle(im, (light.x, light.y), 15, light_state.color, thickness)
 
-        cv2.imshow("live", im)
-        cv2.waitKey()
+        cv2.imshow("busca", im)
+        cv2.waitKey(100)
 
 def scan():
     for elevation in range(0, ELEVATION_STEPS):
