@@ -43,6 +43,7 @@ class AzimuthController:
     def move_to(self, steps):
         while self.position() != steps:
             self.move(self, self.HOMING_DIRECTION, 1)
+        return True
 
 # Initialization
 GPIO.setmode(GPIO.BOARD)
