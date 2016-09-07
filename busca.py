@@ -97,6 +97,10 @@ def process():
 
 def scan():
     for elevation in range(0, ELEVATION_STEPS):
+        # Skip the boring elevations
+        if elevation != 2:
+            continue
+
         elevation_controller.move_to(elevation*(1.0 / ELEVATION_STEPS) + (1.0 / ELEVATION_STEPS) / 2.0)
         for azimuth in range(0, azimuth_controller.total_steps(), 480):
             azimuth_controller.move(True, 480)
