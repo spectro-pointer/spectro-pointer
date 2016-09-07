@@ -39,6 +39,17 @@ def process():
         if is_in_range(light):
             color = (randint(100, 255), randint(100, 255), randint(100, 255))
             light_state = LightState(color)
+            tracker.set(light, light_state)
+
+    count = 0
+    for light in lights:
+        light_state = tracker.get(light)
+        if light_state != None:
+            cv2.circle(im, (light.x, light.y), 15, light_state.color, 3)
+            count += 1
+    print "Showing the " + str(count) + " detected lights in range..."
+    cv2.imshow("busca", im)
+    cv2.waitKey(5000)
 
     while True:
         im = camera.capture_frame()
