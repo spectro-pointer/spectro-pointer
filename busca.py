@@ -120,8 +120,12 @@ def scan():
         elevation_controller.move_to(elevation*(1.0 / ELEVATION_STEPS) + (1.0 / ELEVATION_STEPS) / 2.0)
         for azimuth in range(0, azimuth_controller.total_steps(), 480):
             azimuth_controller.move(True, 480)
+            old_position = azimuth_controller.position()
             print "Azimuth: " + str(azimuth_controller.position()) + " Elevation: " + str(elevation_controller.position())
             process();
+            new_position = azimuth_controller.position()
+            print 'New position ' + str(new_position) + ', old position ' + str(old_position)
+            azimuth_controller.move_to(old_position)
 
 while True:
     scan()
