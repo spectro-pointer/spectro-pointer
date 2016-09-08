@@ -46,7 +46,7 @@ class AzimuthController:
         if position < 0 or position >= self.total_steps():
             raise ValueError("Invalid position")
 
-        direction = self.LEFT_DIRECTION if position - self.position() <= 0 else self.RIGHT_DIRECTION
+        direction = self.LEFT_DIRECTION if position >= self.position() else self.RIGHT_DIRECTION
         while self.position() != position:
             self.move(direction, 1)
 
