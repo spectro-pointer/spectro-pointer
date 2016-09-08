@@ -8,7 +8,9 @@ class AzimuthController:
     HOME_GPIO = 22
     MICROSTEPS = 400
     GEAR_RATIO = 48
-    HOMING_DIRECTION = True
+    LEFT_DIRECTION = True
+    RIGHT_DIRECTION = not LEFT_DIRECTION
+    HOMING_DIRECTION = LEFT_DIRECTION
 
     def __init__(self):
         GPIO.setup(self.HOME_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -41,8 +43,13 @@ class AzimuthController:
         return True
 
     def move_to(self, position):
+        if position < 0 or position >= self.total_steps():
+            raise ValueError("Invalid position")
+
+        direction = self.LEFT_DIRECTION if position - self.position() <= 0 else self.RIGHT_DIRECTION
         while self.position() != position:
-            self.move(self.HOMING_DIRECTION, 1)
+            self.move(direction, 1)
+
         return True
 
 # Initialization
