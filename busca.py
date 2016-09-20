@@ -56,9 +56,8 @@ def process():
         lights = detector.detect(im)
         tracker.track(lights)
 
-        light_to_follow = None
-
         # Find back the light we are currently tracking
+        light_to_follow = None
         for light in lights:
             light_state = tracker.get(light)
             if light_state != None and light_state.in_tracking:
@@ -74,31 +73,45 @@ def process():
                     light_to_follow = light
                     light_state.in_tracking = True
                     break
-        print "Newly tracking: " + str(light_to_follow)
+        print "Now tracking: " + str(light_to_follow)
 
-        # If still none, we are done with this part of the scan
+        # If still none, we are done
         if light_to_follow == None:
             break
 
-        # Are we done tracking the current light
+        # Is the light to be tracked centered?
         x = light_to_follow.x
-        e = x - 320
-        if abs(e) <= 10:
+        error_x = x - 320
+
+        y = light_to_follow.y
+        error_y = y - 240
+
+        if abs(error_x) <= 10 and abs(error_y) <= 10:
             light_state = tracker.get(light_to_follow)
             light_state.in_tracking = False
             light_state.tracked = True
             continue
 
         # Get closer to the light's center
-        steps = 10
-        if e < -1:
-            print "Light is on the left @ " + str(x) + " & error = " + str(e)
+        steps = 30
+        if error_x <= 0:
+            print "Light is on the left @ " + str(x) + " & error = " + str(error_x)
             azimuth_controller.move_left(steps)
-            print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
-        elif e > 1:
-            print "Light is on the right @ " + str(x) + " & error = " + str(e)
+        else:
+            print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
             azimuth_controller.move_right(steps)
-            print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
+
+        amplitude = 0.2
+        if error_y <= 0:
+            print "Light is above @ " + str(y) + " & error = " + str(error_y)
+            elevation = elevation_controller.position() + amplitude
+            # TODO Check elevation range
+            elevation_controller.move_to(elevation)
+        else:
+            print "Light is under @ " + str(y) + " & error = " + str(error_y)
+            elevation = elevation_controller.position() - amplitude
+            # TODO Check elevation range
+            elevation_controller.move_to(elevation)
 
         # Show the current image
         for light in lights:
