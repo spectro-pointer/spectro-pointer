@@ -103,7 +103,7 @@ def process():
             print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
             azimuth_controller.move_right(steps)
 
-        amplitude = 0.005
+        amplitude = 0.0025
         if error_y < epsilon:
             print "Light is above @ " + str(y) + " & error = " + str(error_y)
             elevation = elevation_controller.position() - amplitude
