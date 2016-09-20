@@ -131,7 +131,7 @@ def scan():
             print "Azimuth: " + str(azimuth_controller.position()) + " Elevation: " + str(elevation_controller.position())
             process()
             new_position = azimuth_controller.position()
-            print 'New position ' + str(new_position) + ', old position ' + str(old_position)
+            print "New position " + str(new_position) + ", old position " + str(old_position)
             azimuth_controller.move_to(old_position)
 
 while True:
