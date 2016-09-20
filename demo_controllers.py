@@ -12,7 +12,7 @@ position = azimuth_controller.position()
 print "Current position: " + str(position)
 
 print "Moving left..."
-azimuth_controller.move(True, 1000)
+azimuth_controller.move_left(1000)
 print "Done, currently at position = " + str(azimuth_controller.position())
 time.sleep(5.0)
 
@@ -22,7 +22,7 @@ print "Done, currently at position = " + str(azimuth_controller.position())
 time.sleep(5.0)
 
 print "Moving right..."
-azimuth_controller.move(False, 1000)
+azimuth_controller.move_right(1000)
 print "Done, currently at position = " + str(azimuth_controller.position())
 time.sleep(5.0)
 

@@ -38,6 +38,12 @@ class AzimuthController:
     def total_steps(self):
         return self.__stepper.total_steps()
 
+    def move_left(self, steps):
+        return self.__stepper.move(self.LEFT_DIRECTION, steps)
+
+    def move_right(self, steps):
+        return self.__stepper.move(self.RIGHT_DIRECTION, steps)
+
     def move(self, direction, steps):
         self.__stepper.move(direction, steps)
         return True
