@@ -95,25 +95,27 @@ def process():
             continue
 
         # Get closer to the light's center
-        steps = 30
-        if error_x < epsilon:
-            print "Light is on the left @ " + str(x) + " & error = " + str(error_x)
-            azimuth_controller.move_left(steps)
-        elif error_x > epsilon:
-            print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
-            azimuth_controller.move_right(steps)
+        if abs(error_x) > epsilon:
+            steps = 30
+            if error_x <= 0:
+                print "Light is on the left @ " + str(x) + " & error = " + str(error_x)
+                azimuth_controller.move_left(steps)
+            else:
+                print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
+                azimuth_controller.move_right(steps)
 
-        amplitude = 0.0025
-        if error_y < epsilon:
-            print "Light is above @ " + str(y) + " & error = " + str(error_y)
-            elevation = elevation_controller.position() - amplitude
-            # TODO Check elevation range
-            elevation_controller.move_to(elevation)
-        elif error_y > epsilon:
-            print "Light is under @ " + str(y) + " & error = " + str(error_y)
-            elevation = elevation_controller.position() + amplitude
-            # TODO Check elevation range
-            elevation_controller.move_to(elevation)
+        if abs(error_y) > epsilon:
+            amplitude = 0.0025
+            if error_y <= 0:
+                print "Light is above @ " + str(y) + " & error = " + str(error_y)
+                elevation = elevation_controller.position() - amplitude
+                # TODO Check elevation range
+                elevation_controller.move_to(elevation)
+            else:
+                print "Light is under @ " + str(y) + " & error = " + str(error_y)
+                elevation = elevation_controller.position() + amplitude
+                # TODO Check elevation range
+                elevation_controller.move_to(elevation)
 
         # Show the current image
         for light in lights:
