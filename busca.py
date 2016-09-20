@@ -6,12 +6,12 @@ from random import randint
 from lights import *
 from camera import Camera
 
-MOTORES_IP = '192.168.0.100'
+MOTORES_IP = "192.168.0.100"
 ELEVATION_STEPS = 4
 
 camera = Camera()
-azimuth_controller = xmlrpclib.ServerProxy('http://' + MOTORES_IP + ':8000')
-elevation_controller = xmlrpclib.ServerProxy('http://' + MOTORES_IP + ':8001')
+azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
+elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 detector = LightDetector()
 
 class LightState:
