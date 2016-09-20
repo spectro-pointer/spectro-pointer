@@ -80,13 +80,15 @@ def process():
             break
 
         # Is the light to be tracked centered?
+        epsilon = 10
+
         x = light_to_follow.x
         error_x = x - 320
 
         y = light_to_follow.y
         error_y = y - 240
 
-        if abs(error_x) <= 10 and abs(error_y) <= 10:
+        if abs(error_x) <= epsilon and abs(error_y) <= epsilon:
             light_state = tracker.get(light_to_follow)
             light_state.in_tracking = False
             light_state.tracked = True
@@ -94,20 +96,20 @@ def process():
 
         # Get closer to the light's center
         steps = 30
-        if error_x <= 0:
+        if error_x < epsilon:
             print "Light is on the left @ " + str(x) + " & error = " + str(error_x)
             azimuth_controller.move_left(steps)
-        else:
+        elif error_x > epsilon:
             print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
             azimuth_controller.move_right(steps)
 
         amplitude = 0.005
-        if error_y <= 0:
+        if error_y < epsilon:
             print "Light is above @ " + str(y) + " & error = " + str(error_y)
             elevation = elevation_controller.position() - amplitude
             # TODO Check elevation range
             elevation_controller.move_to(elevation)
-        else:
+        elif error_y > epsilon:
             print "Light is under @ " + str(y) + " & error = " + str(error_y)
             elevation = elevation_controller.position() + amplitude
             # TODO Check elevation range
