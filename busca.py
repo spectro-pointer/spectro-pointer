@@ -104,12 +104,12 @@ def process():
         amplitude = 0.005
         if error_y <= 0:
             print "Light is above @ " + str(y) + " & error = " + str(error_y)
-            elevation = elevation_controller.position() + amplitude
+            elevation = elevation_controller.position() - amplitude
             # TODO Check elevation range
             elevation_controller.move_to(elevation)
         else:
             print "Light is under @ " + str(y) + " & error = " + str(error_y)
-            elevation = elevation_controller.position() - amplitude
+            elevation = elevation_controller.position() + amplitude
             # TODO Check elevation range
             elevation_controller.move_to(elevation)
 
