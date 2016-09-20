@@ -93,11 +93,11 @@ def process():
         steps = 10
         if e < -1:
             print "Light is on the left @ " + str(x) + " & error = " + str(e)
-            azimuth_controller.move(True, steps)
+            azimuth_controller.move_left(steps)
             print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
         elif e > 1:
             print "Light is on the right @ " + str(x) + " & error = " + str(e)
-            azimuth_controller.move(False, steps)
+            azimuth_controller.move_right(steps)
             print "New position: " + str(azimuth_controller.position()) + ", moved by " + str(steps) + " steps"
 
         # Show the current image
@@ -126,7 +126,7 @@ def scan():
 
         elevation_controller.move_to(elevation*(1.0 / ELEVATION_STEPS) + (1.0 / ELEVATION_STEPS) / 2.0)
         for azimuth in range(0, azimuth_controller.total_steps(), 480*2):
-            azimuth_controller.move(True, 480*2)
+            azimuth_controller.move_left(480*2)
             old_position = azimuth_controller.position()
             print "Azimuth: " + str(azimuth_controller.position()) + " Elevation: " + str(elevation_controller.position())
             process()
