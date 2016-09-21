@@ -20,8 +20,7 @@ class ErrorController:
     ERROR_TOLERANCE = 1
     P_AZIMUTH = 5 # 30 is ~4px
     P_ELEVATION = 0.0005 # 0.0025 is ~3 px
-    MAX_AZIMUTH_DELTA = 50
-    MAX_ELEVATION_DELTA = 0.003
+    MAX_MULTIPLIER = 10
 
     @staticmethod
     def center(x, y):
@@ -32,14 +31,14 @@ class ErrorController:
             return True
 
         if abs(error_x) > ErrorController.ERROR_TOLERANCE:
-            delta = min(abs(error_x) * ErrorController.P_AZIMUTH, ErrorController.MAX_AZIMUTH_DELTA)
+            delta = min(abs(error_x), ErrorController.MAX_MULTIPLIER) * ErrorController.P_AZIMUTH
             if error_x <= 0:
                 azimuth_controller.move_left(delta)
             else:
                 azimuth_controller.move_right(delta)
 
         if abs(error_y) > ErrorController.ERROR_TOLERANCE:
-            delta = min(abs(error_y) * ErrorController.P_ELEVATION, ErrorController.MAX_ELEVATION_DELTA)
+            delta = min(abs(error_y), ErrorController.MAX_MULTIPLIER) * ErrorController.P_ELEVATION
             if error_y <= 0:
                 elevation = elevation_controller.position() - delta
                 # TODO Check elevation range
