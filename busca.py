@@ -14,6 +14,41 @@ azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 detector = LightDetector()
 
+class ErrorController:
+    WIDTH = 640
+    HEIGHT = 480
+    ERROR_TOLERANCE = 1
+    P_AZIMUTH = 5 # 30 is ~4px
+    P_ELEVATION = 0.0005 # 0.0025 is ~3 px
+
+    @staticmethod
+    def center(x, y):
+        error_x = x - (self.WIDTH / 2)
+        error_y = y - (self.HEIGHT / 2)
+
+        if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_x) <= self.ERROR_TOLERANCE:
+            return True
+
+        if abs(error_x) > self.ERROR_TOLERANCE:
+            delta = abs(error_x) * self.P_AZIMUTH
+            if error_x <= 0:
+                azimuth_controller.move_left(delta)
+            else:
+                azimuth_controller.move_right(delta)
+
+        if abs(error_y) > self.ERROR_TOLERANCE:
+            delta = abs(error_y) * self.P_ELEVATION
+            if error_y <= 0:
+                elevation = elevation_controller.position() - delta
+                # TODO Check elevation range
+                elevation_controller.move_to(elevation)
+            else:
+                elevation = elevation_controller.position() + delta
+                # TODO Check elevation range
+                elevation_controller.move_to(elevation)
+
+        return False
+
 class LightState:
     def __init__(self, color):
         self.in_tracking = False
@@ -80,42 +115,13 @@ def process():
             break
 
         # Is the light to be tracked centered?
-        epsilon = 10
+        is_centered = ErrorController.center(light_to_follow.x, light_to_follow.y)
 
-        x = light_to_follow.x
-        error_x = x - 320
-
-        y = light_to_follow.y
-        error_y = y - 240
-
-        if abs(error_x) <= epsilon and abs(error_y) <= epsilon:
+        if is_centered:
             light_state = tracker.get(light_to_follow)
             light_state.in_tracking = False
             light_state.tracked = True
             continue
-
-        # Get closer to the light's center
-        if abs(error_x) > epsilon:
-            steps = 30
-            if error_x <= 0:
-                print "Light is on the left @ " + str(x) + " & error = " + str(error_x)
-                azimuth_controller.move_left(steps)
-            else:
-                print "Light is on the right @ " + str(x) + " & error = " + str(error_x)
-                azimuth_controller.move_right(steps)
-
-        if abs(error_y) > epsilon:
-            amplitude = 0.0025
-            if error_y <= 0:
-                print "Light is above @ " + str(y) + " & error = " + str(error_y)
-                elevation = elevation_controller.position() - amplitude
-                # TODO Check elevation range
-                elevation_controller.move_to(elevation)
-            else:
-                print "Light is under @ " + str(y) + " & error = " + str(error_y)
-                elevation = elevation_controller.position() + amplitude
-                # TODO Check elevation range
-                elevation_controller.move_to(elevation)
 
         # Show the current image
         for light in lights:
