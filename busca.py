@@ -23,21 +23,21 @@ class ErrorController:
 
     @staticmethod
     def center(x, y):
-        error_x = x - (self.WIDTH / 2)
-        error_y = y - (self.HEIGHT / 2)
+        error_x = x - (ErrorController.WIDTH / 2)
+        error_y = y - (ErrorController.HEIGHT / 2)
 
-        if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_x) <= self.ERROR_TOLERANCE:
+        if abs(error_x) <= ErrorController.ERROR_TOLERANCE and abs(error_x) <= ErrorController.ERROR_TOLERANCE:
             return True
 
-        if abs(error_x) > self.ERROR_TOLERANCE:
-            delta = abs(error_x) * self.P_AZIMUTH
+        if abs(error_x) > ErrorController.ERROR_TOLERANCE:
+            delta = abs(error_x) * ErrorController.P_AZIMUTH
             if error_x <= 0:
                 azimuth_controller.move_left(delta)
             else:
                 azimuth_controller.move_right(delta)
 
-        if abs(error_y) > self.ERROR_TOLERANCE:
-            delta = abs(error_y) * self.P_ELEVATION
+        if abs(error_y) > ErrorController.ERROR_TOLERANCE:
+            delta = abs(error_y) * ErrorController.P_ELEVATION
             if error_y <= 0:
                 elevation = elevation_controller.position() - delta
                 # TODO Check elevation range
