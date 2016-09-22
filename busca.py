@@ -71,19 +71,19 @@ class Busca:
         im = self.camera.capture_frame()
         lights = self.detector.detect(im)
 
-        tracker.track(lights)
+        self.tracker.track(lights)
 
         # Assign a random color to new lights
         for light in lights:
-            light_state = tracker.get(light)
+            light_state = self.tracker.get(light)
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
-                tracker.set(light, light_state)
+                self.tracker.set(light, light_state)
 
         # Show all detected lights
         for light in lights:
-            light_state = tracker.get(light)
+            light_state = self.tracker.get(light)
             cv2.circle(im, (light.x, light.y), 15, light_state.color, 3)
         cv2.imshow("busca", im)
         cv2.waitKey(100)
@@ -92,12 +92,12 @@ class Busca:
         while True:
             im = self.camera.capture_frame()
             lights = self.detector.detect(im)
-            tracker.track(lights)
+            self.tracker.track(lights)
 
             # Find back the light we are currently tracking
             light_to_follow = None
             for light in lights:
-                light_state = tracker.get(light)
+                light_state = self.tracker.get(light)
                 if light_state != None and light_state.in_tracking:
                     light_to_follow = light
                     break
@@ -105,7 +105,7 @@ class Busca:
             # If none, find a next light to track
             if light_to_follow == None:
                 for light in lights:
-                    light_state = tracker.get(light)
+                    light_state = self.tracker.get(light)
                     if self.is_in_range(light) and light_state != None and not light_state.tracked:
                         light_to_follow = light
                         light_state.in_tracking = True
@@ -119,14 +119,14 @@ class Busca:
             is_centered = self.error_controller.center(light_to_follow.x, light_to_follow.y)
 
             if is_centered:
-                light_state = tracker.get(light_to_follow)
+                light_state = self.tracker.get(light_to_follow)
                 light_state.in_tracking = False
                 light_state.tracked = True
                 continue
 
             # Show the current image
             for light in lights:
-                light_state = tracker.get(light)
+                light_state = self.tracker.get(light)
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
 
