@@ -45,6 +45,15 @@ class ErrorController:
 
         return False
 
+    def capture_positions(self):
+        self.old_azimuth = self.azimuth_controller.position()
+        self.old_elevation = self.elevation_controller.position()
+
+    def restore_positions(self):
+        azimuth_reached = azimuth_controller.move_to(self.old_azimuth, self.P_AZIMUTH * self.MAX_MULTIPLIER)
+        elevation_reached = elevation_controller.move_to(self.old_elevation, self.P_ELEVATION * self.MAX_MULTIPLIER)
+        return azimuth_reached and elevation_reached
+
 class LightState:
     def __init__(self, color):
         self.in_tracking = False
@@ -68,9 +77,11 @@ class Busca:
         self.tracker = LightTracker()
 
     def process(self):
+        # Capture current controller positions
+        self.error_controller.capture_positions()
+
         im = self.camera.capture_frame()
         lights = self.detector.detect(im)
-
         self.tracker.track(lights)
 
         # Assign a random color to new lights
@@ -143,6 +154,12 @@ class Busca:
             cv2.imshow("busca", im)
             cv2.waitKey(100)
 
+        # Restore controller positions incrementally
+        while not self.error_controller.restore_positions():
+            im = self.camera.capture_frame()
+            lights = self.detector.detect(im)
+            self.tracker.track(lights)
+
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):
         # Skip the boring elevations
@@ -157,8 +174,8 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
             old_azimuth = azimuth_controller.position()
             old_elevation = elevation_controller.position()
             busca.process()
-            azimuth_controller.move_to(old_azimuth)
-            elevation_controller.move_to(old_elevation)
+            if azimuth_controller.position() != old_azimuth or elevation_controller.position() != old_elevation:
+                raise ValueError("Unexpected controller positions")
 
 MOTORES_IP = "192.168.0.100"
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
