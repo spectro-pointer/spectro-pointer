@@ -52,42 +52,43 @@ class LightState:
         self.color = color
 
 class Busca:
+    WIDTH = 640
+    HEIGHT = 480
+
     def __init__(self, camera, detector, error_controller):
         self.camera = camera
         self.detector = detector
         self.error_controller = error_controller
+        self.tracker = LightTracker()
 
     def is_in_range(self, light):
-        return light.x > 160 and light.x < 520 and light.y > 120 and light.y < 360
+        return light.x > (self.WIDTH / 2) - 10 and light.x < (self.WIDTH / 2) + 10 and light.y > 1 * (self.HEIGHT / 4) and light.y < 3 * (self.HEIGHT / 4)
+
+    def clear_tracker(self):
+        self.tracker = LightTracker()
 
     def process(self):
         im = self.camera.capture_frame()
         lights = self.detector.detect(im)
 
-        tracker = LightTracker()
         tracker.track(lights)
 
-        if len(lights) == 0:
-            print "No lights detects"
-            cv2.imshow("busca", im)
-            cv2.waitKey(100)
-
+        # Assign a random color to new lights
         for light in lights:
-            if self.is_in_range(light):
+            light_state = tracker.get(light)
+            if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
                 tracker.set(light, light_state)
 
-        count = 0
+        # Show all detected lights
         for light in lights:
             light_state = tracker.get(light)
-            if light_state != None:
-                cv2.circle(im, (light.x, light.y), 15, light_state.color, 3)
-                count += 1
-        print "Showing the " + str(count) + " detected lights in range..."
+            cv2.circle(im, (light.x, light.y), 15, light_state.color, 3)
         cv2.imshow("busca", im)
-        cv2.waitKey(5000)
+        cv2.waitKey(100)
 
+        # Track all lights currently in range
         while True:
             im = self.camera.capture_frame()
             lights = self.detector.detect(im)
@@ -100,17 +101,15 @@ class Busca:
                 if light_state != None and light_state.in_tracking:
                     light_to_follow = light
                     break
-            print "Currently tracking: " + str(light_to_follow)
 
             # If none, find a next light to track
             if light_to_follow == None:
                 for light in lights:
                     light_state = tracker.get(light)
-                    if light_state != None and not light_state.tracked:
+                    if self.is_in_range(light) and light_state != None and not light_state.tracked:
                         light_to_follow = light
                         light_state.in_tracking = True
                         break
-            print "Now tracking: " + str(light_to_follow)
 
             # If still none, we are done
             if light_to_follow == None:
@@ -149,6 +148,8 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
         if elevation != 2:
             continue
         elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
+
+        busca.clear_tracker()
 
         for azimuth in range(0, azimuth_controller.total_steps(), 40):
             azimuth_controller.move_left(40)
