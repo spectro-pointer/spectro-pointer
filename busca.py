@@ -144,11 +144,11 @@ class Busca:
             cv2.waitKey(100)
 
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
-    for elevation in range(0, ELEVATION_STEPS):
+    for elevation in range(0, elevation_steps):
         # Skip the boring elevations
         if elevation != 2:
             continue
-        elevation_controller.move_to(elevation*(1.0 / ELEVATION_STEPS) + (1.0 / ELEVATION_STEPS) / 2.0)
+        elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
 
         for azimuth in range(0, azimuth_controller.total_steps(), 40):
             azimuth_controller.move_left(40)
