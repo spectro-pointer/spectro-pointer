@@ -1,3 +1,4 @@
+import sys
 import RPi.GPIO as GPIO
 from stepper import Stepper
 from SimpleXMLRPCServer import SimpleXMLRPCServer
@@ -48,7 +49,7 @@ class AzimuthController:
         self.__stepper.move(direction, steps)
         return True
 
-    def move_to(self, position):
+    def move_to(self, position, max_steps = sys.maxint):
         if position < 0 or position >= self.total_steps():
             raise ValueError("Invalid position")
 
@@ -56,11 +57,11 @@ class AzimuthController:
         steps_from_right = (self.position() - position) % self.total_steps()
 
         if steps_from_left <= steps_from_right:
-            self.move(self.LEFT_DIRECTION, steps_from_left)
+            self.move(self.LEFT_DIRECTION, min(steps_from_left, max_steps))
+            return steps_from_left <= max_steps
         else:
-            self.move(self.RIGHT_DIRECTION, steps_from_right)
-
-        return True
+            self.move(self.RIGHT_DIRECTION, min(steps_from_right, max_steps))
+            return steps_from_right <= max_steps
 
 # Initialization
 GPIO.setmode(GPIO.BOARD)
