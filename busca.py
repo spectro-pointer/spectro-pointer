@@ -134,7 +134,6 @@ class Busca:
                 light_state = self.tracker.get(light_to_follow)
                 light_state.in_tracking = False
                 light_state.tracked = True
-                continue
 
             # Show the current image
             for light in lights:
