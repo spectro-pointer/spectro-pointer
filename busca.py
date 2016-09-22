@@ -73,7 +73,7 @@ class Busca:
             cv2.waitKey(100)
 
         for light in lights:
-            if is_in_range(light):
+            if self.is_in_range(light):
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
                 tracker.set(light, light_state)
