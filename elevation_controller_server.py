@@ -1,4 +1,3 @@
-import sys
 import RPi.GPIO as GPIO
 from stepper import Stepper
 from SimpleXMLRPCServer import SimpleXMLRPCServer
@@ -59,13 +58,14 @@ class ElevationController:
     def amplitude(self):
         return self.__amplitude
 
-    def move_to(self, percentage_amplitude, max_delta = sys.maxint):
+    def move_to(self, percentage_amplitude, max_delta = 1.0):
         if percentage_amplitude < 0 or percentage_amplitude > 1:
             raise ValueError("Percentage of amplitude must be between 0 and 1: " + str(percentage_amplitude))
-        delta = int((percentage_amplitude - self.position()) * self.amplitude())
-        direction = self.UP_DIRECTION if delta < 0 else self.DOWN_DIRECTION
-        self.__stepper.move(direction, min(abs(delta), max_delta))
-        return abs(delta) <= max_delta
+        steps = int((percentage_amplitude - self.position()) * self.amplitude())
+        max_steps = int(max_delta * self.amplitude())
+        direction = self.UP_DIRECTION if steps < 0 else self.DOWN_DIRECTION
+        self.__stepper.move(direction, min(abs(steps), max_steps))
+        return abs(steps) <= max_steps
 
 # Initialization
 GPIO.setmode(GPIO.BOARD)
