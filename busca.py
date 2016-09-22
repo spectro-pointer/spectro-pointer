@@ -84,7 +84,8 @@ class Busca:
         # Show all detected lights
         for light in lights:
             light_state = self.tracker.get(light)
-            cv2.circle(im, (light.x, light.y), 15, light_state.color, 3)
+            color = (255, 0, 0) if light_state.tracked else light_state.color
+            cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
         cv2.waitKey(100)
 
