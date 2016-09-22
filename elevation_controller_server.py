@@ -63,7 +63,7 @@ class ElevationController:
         if percentage_amplitude < 0 or percentage_amplitude > 1:
             raise ValueError("Percentage of amplitude must be between 0 and 1: " + str(percentage_amplitude))
         delta = int((percentage_amplitude - self.position()) * self.amplitude())
-        direction = self.UP_DIRECTION if steps < 0 else self.DOWN_DIRECTION
+        direction = self.UP_DIRECTION if delta < 0 else self.DOWN_DIRECTION
         self.__stepper.move(direction, min(abs(delta), max_delta))
         return abs(delta) <= max_delta
 
