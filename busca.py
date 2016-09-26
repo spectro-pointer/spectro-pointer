@@ -22,7 +22,7 @@ class ErrorController:
         error_x = x - (self.WIDTH / 2)
         error_y = y - (self.HEIGHT / 2)
 
-        if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_x) <= self.ERROR_TOLERANCE:
+        if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_y) <= self.ERROR_TOLERANCE:
             return True
 
         if abs(error_x) > self.ERROR_TOLERANCE:
