@@ -25,8 +25,6 @@ class ErrorController:
         if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_y) <= self.ERROR_TOLERANCE:
             return True
 
-        self.moved = True
-
         if abs(error_x) > self.ERROR_TOLERANCE:
             delta = min(abs(error_x), self.MAX_MULTIPLIER) * self.P_AZIMUTH
             if error_x <= 0:
@@ -50,12 +48,8 @@ class ErrorController:
     def capture_positions(self):
         self.old_azimuth = self.azimuth_controller.position()
         self.old_elevation = self.elevation_controller.position()
-        self.moved = False
 
     def restore_positions(self):
-        if not self.moved:
-            return True
-
         azimuth_reached = azimuth_controller.move_to(self.old_azimuth, self.P_AZIMUTH * self.MAX_MULTIPLIER)
         elevation_reached = elevation_controller.move_to(self.old_elevation, self.P_ELEVATION * self.MAX_MULTIPLIER)
         return azimuth_reached and elevation_reached
@@ -104,7 +98,7 @@ class Busca:
             color = (255, 0, 0) if light_state.tracked else light_state.color
             cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
-        cv2.waitKey(20 if len(lights) == 0 else 100)
+        cv2.waitKey(100)
 
         # Track all lights currently in range
         while True:
