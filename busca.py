@@ -159,6 +159,24 @@ class Busca:
             lights = self.detector.detect(im)
             self.tracker.track(lights)
 
+            # Show the current image
+            for light in lights:
+                light_state = self.tracker.get(light)
+                if light_state != None:
+                    thickness = 7 if light_state.in_tracking else 3
+
+                    if light_state.in_tracking:
+                        color = (0, 0, 255)
+                    elif light_state.tracked:
+                        color = (255, 0, 0)
+                    else:
+                        color = light_state.color
+
+                    cv2.circle(im, (light.x, light.y), 15, color, thickness)
+
+            cv2.imshow("busca", im)
+            cv2.waitKey(100)
+
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):
         # Skip the boring elevations
