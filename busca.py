@@ -191,6 +191,7 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
 
             print "@ elevation " + str(elevation_controller.position()) + " & azimuth " + str(azimuth_controller.position())
             if scans_without_light > 5 and scans_without_light % 12 != 0:
+                scans_without_light += 1
                 print "  skipped because last " + str(scans_without_light) + " scans where without any lights"
                 continue
 
