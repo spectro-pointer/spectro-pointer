@@ -7,8 +7,8 @@ class Light:
         self.area = area
 
 class LightDetector:
-    MIN_BRIGHTNESS_THRESHOLD = 150
-    MIN_LIGHT_AREA = 5
+    MIN_BRIGHTNESS_THRESHOLD = 130
+    MIN_LIGHT_AREA = 3
 
     def detect(self, im):
         gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
