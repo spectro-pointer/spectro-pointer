@@ -12,7 +12,7 @@ class ErrorController:
     ERROR_TOLERANCE = 1
     P_AZIMUTH = 5 # 30 is ~4px
     P_ELEVATION = 0.0005 # 0.0025 is ~3 px
-    MAX_MULTIPLIER = 5
+    MAX_MULTIPLIER = 10
 
     def __init__(self, azimuth_controller, elevation_controller):
         self.azimuth_controller = azimuth_controller
