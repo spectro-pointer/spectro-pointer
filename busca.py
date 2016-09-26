@@ -204,7 +204,7 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
             else:
                 scans_without_light = 0 
 
-            if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.0001:
+            if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.001:
                 raise ValueError("Unexpected controller positions: azimuth " + str(azimuth_controller.position()) + " vs " + str(old_azimuth) + ", elevation: " + str(elevation_controller.position()) + " vs " + str(old_elevation))
 
 MOTORES_IP = "192.168.0.100"
