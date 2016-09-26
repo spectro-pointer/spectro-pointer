@@ -177,20 +177,32 @@ class Busca:
             cv2.imshow("busca", im)
             cv2.waitKey(100)
 
+        return len(lights)
+
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):
         elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
 
         busca.clear_tracker()
 
+        scans_without_light = 0
         for azimuth in range(0, azimuth_controller.total_steps(), 40):
             azimuth_controller.move_left(40)
 
             print "@ elevation " + str(elevation_controller.position()) + " & azimuth " + str(azimuth_controller.position())
+            if scans_without_light > 5 and scans_without_light % 12 != 0:
+                print "  skipped because last " + str(scans_without_light) + " scans where without any lights"
+                continue
 
             old_azimuth = azimuth_controller.position()
             old_elevation = elevation_controller.position()
-            busca.process()
+
+            number_of_lights = busca.process()
+            if number_of_lights == 0:
+                scans_without_light += 1
+            else:
+                scans_without_light = 0 
+
             if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.0001:
                 raise ValueError("Unexpected controller positions")
 
