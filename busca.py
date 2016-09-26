@@ -179,9 +179,6 @@ class Busca:
 
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):
-        # Skip the boring elevations
-        if elevation != 2:
-            continue
         elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
 
         busca.clear_tracker()
