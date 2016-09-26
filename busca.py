@@ -185,6 +185,9 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
 
         for azimuth in range(0, azimuth_controller.total_steps(), 40):
             azimuth_controller.move_left(40)
+
+            print "@ elevation " + elevation_controller.position() + " & azimuth " + azimuth_controller.position()
+
             old_azimuth = azimuth_controller.position()
             old_elevation = elevation_controller.position()
             busca.process()
