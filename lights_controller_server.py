@@ -1,8 +1,8 @@
 import cv2
 import xmlrpclib
 import copy
+import thread
 
-from multiprocessing import Process, Lock
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from lights import *
@@ -12,7 +12,7 @@ class LightsController:
     def __init__(self, camera, detector, tracker):
         self.camera = camera
         self.tracker = tracker
-        self.lock = Lock()
+        self.lock = threading.Lock()
 
     def loop(self):
         im = self.camera.capture_frame()
@@ -54,11 +54,5 @@ def serve_requests(controller):
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())
 
-    p1 = Process(target = track_lights, args = (controller, ))
-    p1.start()
-
-    p2 = Process(target = serve_requests, args = (controller, ))
-    p2.start()
-
-    p1.join()
-    p2.join()
+    thread.start_new_thread(track_lights, (controller, ))
+    thread.start_new_thread(serve_requests, (controller, ))
