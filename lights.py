@@ -65,7 +65,7 @@ class LightTracker:
         self.set_if_present(light, value)
 
     def set_if_present(self, light, value):
-        if light not in self.old_lights
+        if light not in self.old_lights:
             return False
 
         self.dictionary[light] = value
