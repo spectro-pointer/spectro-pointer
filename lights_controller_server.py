@@ -52,10 +52,10 @@ def serve_requests(controller):
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())
 
-    p1 = Process(target = track_lights, args = (controller))
+    p1 = Process(target = track_lights, args = (controller, ))
     p1.start()
 
-    p2 = Process(target = serve_requests, args = (controller))
+    p2 = Process(target = serve_requests, args = (controller, ))
     p2.start()
 
     p1.join()
