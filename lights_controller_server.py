@@ -28,7 +28,7 @@ class LightsController:
 
     def get(self):
         self.lock.acquire()
-        result = (copy.deepcopy(self.lights), copy.deepcopy(self.im))
+        result = (copy.deepcopy(self.lights))
         self.lock.release()
 
         return result
