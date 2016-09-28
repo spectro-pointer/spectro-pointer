@@ -62,7 +62,14 @@ class LightTracker:
 
     def set(self, light, value):
         self.raise_if_light_not_valid(light)
+        self.set_if_present(light, value)
+
+    def set_if_present(self, light, value):
+        if light not in self.old_lights
+            return False
+
         self.dictionary[light] = value
+        return True
 
     def raise_if_light_not_valid(self, light):
         if light not in self.old_lights:
