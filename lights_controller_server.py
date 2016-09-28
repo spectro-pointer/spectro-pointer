@@ -57,8 +57,8 @@ def serve_requests(controller):
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())
 
-    t = threading.Thread(target = track_lights, args = (controller, ))
+    t = threading.Thread(target = serve_requests, args = (controller, ))
     t.deamon = True
     t.start()
 
-    serve_requests()
+    track_lights(controller)
