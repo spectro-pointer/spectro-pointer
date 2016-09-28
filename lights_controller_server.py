@@ -2,6 +2,7 @@ import cv2
 import xmlrpclib
 import copy
 import threading
+import time
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
@@ -27,7 +28,7 @@ class LightsController:
 
     def get(self):
         self.lock.acquire()
-        result = (copy.deepcopy(self.lights), copy.deepcopy(self.tracker.dictionary), copy.deepcopy(self.im))
+        result = (copy.deepcopy(self.lights), copy.deepcopy(self.im))
         self.lock.release()
 
         return result
@@ -56,11 +57,8 @@ def serve_requests(controller):
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())
 
-    t1 = threading.Thread(target = track_lights, args = (controller, ))
-    t2 = threading.Thread(target = serve_requests, args = (controller, ))
+    t = threading.Thread(target = track_lights, args = (controller, ))
+    t.deamon = True
+    t.start()
 
-    t1.start()
-    t2.start()
-
-    t1.join()
-    t2.join()
+    serve_requests()
