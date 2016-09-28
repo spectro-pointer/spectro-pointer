@@ -1,7 +1,6 @@
 import cv2
 import xmlrpclib
 import copy
-import thread
 import threading
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
@@ -12,10 +11,11 @@ from camera import Camera
 class LightsController:
     def __init__(self, camera, detector, tracker):
         self.camera = camera
+        self.detector = detector
         self.tracker = tracker
         self.lock = threading.Lock()
 
-    def loop(self):
+    def capture_and_track(self):
         im = self.camera.capture_frame()
         lights = self.detector.detect(im)
 
@@ -41,7 +41,8 @@ class LightsController:
 
 def track_lights(controller):
     print "Starting light tracker loop..."
-    controller.loop()
+    while True:
+        controller.capture_and_track()
 
 def serve_requests(controller):
     print "Initializing the XML-RPC server..."
@@ -55,5 +56,8 @@ def serve_requests(controller):
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())
 
-    thread.start_new_thread(track_lights, (controller, ))
-    thread.start_new_thread(serve_requests, (controller, ))
+    t1 = threading.Thread(target = track_lights, args = (controller, ))
+    t2 = threading.Thread(target = serve_requests, args = (controller, ))
+
+    t1.join()
+    t2.join()
