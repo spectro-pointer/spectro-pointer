@@ -55,7 +55,7 @@ def serve_requests(controller):
     print "Initializing the RPyC server..."
 
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(MyService, port = 8003)
+    t = ThreadedServer(controller, port = 8003)
     t.start()
 
 if __name__ == '__main__':
