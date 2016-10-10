@@ -53,12 +53,6 @@ class ErrorController:
         elevation_reached = elevation_controller.move_to(self.old_elevation, self.P_ELEVATION * self.MAX_MULTIPLIER)
         return azimuth_reached and elevation_reached
 
-class LightState:
-    def __init__(self, color):
-        self.in_tracking = False
-        self.tracked = False
-        self.color = color
-
 class Busca:
     WIDTH = 640
     HEIGHT = 480
@@ -82,7 +76,7 @@ class Busca:
             light_state = tracked_light["state"]
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
-                light_state = LightState(color)
+                light_state = {"in_tracking": False, "tracked": False, "color": color}
 
                 self.lights_controller.root.set(tracked_light["guid"], light_state)
                 tracked_light["state"] = light_state
@@ -92,7 +86,7 @@ class Busca:
             light = tracked_light["light"]
             light_state = tracked_light["state"]
 
-            color = (255, 0, 0) if light_state.tracked else light_state.color
+            color = (255, 0, 0) if light_state["tracked"] else light_state["color"]
             cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
         cv2.waitKey(100)
@@ -107,7 +101,7 @@ class Busca:
             for tracked_light in tracked_lights:
                 light_state = tracked_light["state"]
 
-                if light_state != None and light_state.in_tracking:
+                if light_state != None and light_state["in_tracking"]:
                     light_to_follow = tracked_light
                     break
 
@@ -117,9 +111,9 @@ class Busca:
                     light = tracked_light["light"]
                     light_state = tracked_light["state"]
 
-                    if self.is_in_range(light) and light_state != None and not light_state.tracked:
+                    if self.is_in_range(light) and light_state != None and not light_state["tracked"]:
                         tracked_light_to_follow = tracked_light
-                        light_state.in_tracking = True
+                        light_state["in_tracking"] = True
                         self.lights_controller.root.set(tracked_light["guid"], light_state)
                         break
 
@@ -132,8 +126,8 @@ class Busca:
 
             if is_centered:
                 light_state = tracked_light_to_follow["state"]
-                light_state.in_tracking = False
-                light_state.tracked = True
+                light_state["in_tracking"] = False
+                light_state["tracked"] = True
                 self.lights_controller.root.set(tracked_light_to_follow["guid"], light_state)
 
             # Show the current image
@@ -142,14 +136,14 @@ class Busca:
                 light_state = tracked_light["state"]
 
                 if light_state != None:
-                    thickness = 7 if light_state.in_tracking else 3
+                    thickness = 7 if light_state["in_tracking"] else 3
 
-                    if light_state.in_tracking:
+                    if light_state["in_tracking"]:
                         color = (0, 0, 255)
-                    elif light_state.tracked:
+                    elif light_state["tracked"]:
                         color = (255, 0, 0)
                     else:
-                        color = light_state.color
+                        color = light_state["color"]
 
                     cv2.circle(im, (light.x, light.y), 15, color, thickness)
 
@@ -167,21 +161,21 @@ class Busca:
                 light_state = tracked_light["state"]
 
                 if light_state != None:
-                    thickness = 7 if light_state.in_tracking else 3
+                    thickness = 7 if light_state["in_tracking"] else 3
 
-                    if light_state.in_tracking:
+                    if light_state["in_tracking"]:
                         color = (0, 0, 255)
-                    elif light_state.tracked:
+                    elif light_state["tracked"]:
                         color = (255, 0, 0)
                     else:
-                        color = light_state.color
+                        color = light_state["color"]
 
                     cv2.circle(im, (light.x, light.y), 15, color, thickness)
 
             cv2.imshow("busca", im)
             cv2.waitKey(100)
 
-        return len(lights)
+        return len(tracked_lights)
 
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):

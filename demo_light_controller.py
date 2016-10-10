@@ -2,7 +2,7 @@ import rpyc
 from lights import *
 import numpy as np
 
-controller = rpyc.connect("127.0.0.1", 8003)
+controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs": True, "allow_pickle": True})
 
 while True:
     tracked_lights, im = controller.root.get()
