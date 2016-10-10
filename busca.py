@@ -1,10 +1,9 @@
 import cv2
 import xmlrpclib
 import time
+import rpyc
+import numpy as np
 from random import randint
-
-from lights import *
-from camera import Camera
 
 class ErrorController:
     WIDTH = 640
@@ -64,37 +63,33 @@ class Busca:
     WIDTH = 640
     HEIGHT = 480
 
-    def __init__(self, camera, detector, error_controller):
-        self.camera = camera
-        self.detector = detector
+    def __init__(self, lights_controller, error_controller):
+        self.lights_controller = lights_controller
         self.error_controller = error_controller
-        self.tracker = LightTracker()
 
     def is_in_range(self, light):
         return light.x > (self.WIDTH / 2) - 10 and light.x < (self.WIDTH / 2) + 10 and light.y > 1 * (self.HEIGHT / 4) and light.y < 3 * (self.HEIGHT / 4)
-
-    def clear_tracker(self):
-        self.tracker = LightTracker()
 
     def process(self):
         # Capture current controller positions
         self.error_controller.capture_positions()
 
-        im = self.camera.capture_frame()
-        lights = self.detector.detect(im)
-        self.tracker.track(lights)
+        lights, tracker, im = self.lights_controller.root.get()
+        im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
         # Assign a random color to new lights
         for light in lights:
-            light_state = self.tracker.get(light)
+            light_state = tracker.get(light)
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
-                self.tracker.set(light, light_state)
+
+                self.lights_controller.root.set(light, light_state)
+                tracker[light] = light_state
 
         # Show all detected lights
         for light in lights:
-            light_state = self.tracker.get(light)
+            light_state = tracker.get(light)
             color = (255, 0, 0) if light_state.tracked else light_state.color
             cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
@@ -102,14 +97,13 @@ class Busca:
 
         # Track all lights currently in range
         while True:
-            im = self.camera.capture_frame()
-            lights = self.detector.detect(im)
-            self.tracker.track(lights)
+            lights, tracker, im = self.lights_controller.root.get()
+            im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Find back the light we are currently tracking
             light_to_follow = None
             for light in lights:
-                light_state = self.tracker.get(light)
+                light_state = tracker.get(light)
                 if light_state != None and light_state.in_tracking:
                     light_to_follow = light
                     break
@@ -117,10 +111,11 @@ class Busca:
             # If none, find a next light to track
             if light_to_follow == None:
                 for light in lights:
-                    light_state = self.tracker.get(light)
+                    light_state = tracker.get(light)
                     if self.is_in_range(light) and light_state != None and not light_state.tracked:
                         light_to_follow = light
                         light_state.in_tracking = True
+                        self.lights_controller.root.set(light, light_state)
                         break
 
             # If still none, we are done
@@ -131,13 +126,14 @@ class Busca:
             is_centered = self.error_controller.center(light_to_follow.x, light_to_follow.y)
 
             if is_centered:
-                light_state = self.tracker.get(light_to_follow)
+                light_state = tracker.get(light_to_follow)
                 light_state.in_tracking = False
                 light_state.tracked = True
+                self.lights_controller.root.set(light_to_follow, light_state)
 
             # Show the current image
             for light in lights:
-                light_state = self.tracker.get(light)
+                light_state = tracker.get(light)
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
 
@@ -155,13 +151,12 @@ class Busca:
 
         # Restore controller positions incrementally
         while not self.error_controller.restore_positions():
-            im = self.camera.capture_frame()
-            lights = self.detector.detect(im)
-            self.tracker.track(lights)
+            lights, tracker, im = self.lights_controller.root.get()
+            im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Show the current image
             for light in lights:
-                light_state = self.tracker.get(light)
+                light_state = tracker.get(light)
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
 
@@ -181,9 +176,10 @@ class Busca:
 
 def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
     for elevation in range(0, elevation_steps):
-        elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
+        if elevation < 2:
+            continue
 
-        busca.clear_tracker()
+        elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
 
         scans_without_light = 0
         for azimuth in range(0, azimuth_controller.total_steps(), 40):
@@ -207,10 +203,11 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
             if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.001:
                 raise ValueError("Unexpected controller positions: azimuth " + str(azimuth_controller.position()) + " vs " + str(old_azimuth) + ", elevation: " + str(elevation_controller.position()) + " vs " + str(old_elevation))
 
-MOTORES_IP = "192.168.0.100"
+MOTORES_IP = "127.0.0.1"
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
-busca = Busca(Camera(), LightDetector(), ErrorController(azimuth_controller, elevation_controller))
+lights_controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs" : True})
+busca = Busca(lights_controller, ErrorController(azimuth_controller, elevation_controller))
 
 while True:
-    scan(azimuth_controller,  elevation_controller, busca, elevation_steps = 4)
+    scan(azimuth_controller, elevation_controller, busca, elevation_steps = 4)
