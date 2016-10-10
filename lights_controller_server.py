@@ -9,18 +9,12 @@ import numpy as np
 from lights import *
 from camera import Camera
 
-class LightsController(rpyc.Service):
+class LightsController():
     def __init__(self, camera, detector, tracker):
         self.camera = camera
         self.detector = detector
         self.tracker = tracker
         self.lock = threading.Lock()
-
-    def on_connect(self):
-        pass
-
-    def on_disconnect(self):
-        pass
 
     def capture_and_track(self):
         im = self.camera.capture_frame()
@@ -32,14 +26,14 @@ class LightsController(rpyc.Service):
         self.tracker.track(lights)
         self.lock.release()
 
-    def exposed_get(self):
+    def get(self):
         self.lock.acquire()
         result = (copy.deepcopy(self.lights), im.tostring())
         self.lock.release()
 
         return result
 
-    def exposed_set(self, light, state):
+    def set(self, light, state):
         self.lock.acquire()
         result = self.tracker.set_if_present(light, state)
         self.lock.release()
@@ -54,8 +48,21 @@ def track_lights(controller):
 def serve_requests(controller):
     print "Initializing the RPyC server..."
 
+    class MyService(rpyc.Service):
+        def on_connect(self):
+            pass
+
+        def on_disconnect(self):
+            pass
+        
+        def exposed_get(self:)
+            return controller.get()
+        
+        def exposed_set(light, state):
+            controller.set(light, state)
+
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(controller, port = 8003)
+    t = ThreadedServer(MyService, port = 8003)
     t.start()
 
 if __name__ == '__main__':
