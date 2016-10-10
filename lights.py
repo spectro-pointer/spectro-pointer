@@ -68,7 +68,7 @@ class LightTracker:
             self.dictionary[light_guid] = value
 
     def state(self):
-        return [(self.guids[light], light, self.dictionary.get(self.guids[light])) for light in self.guids]
+        return [{'guid': self.guids[light], 'light': light, 'state': self.dictionary.get(self.guids[light])} for light in self.guids]
 
     @staticmethod
     def distance(light1, light2):
