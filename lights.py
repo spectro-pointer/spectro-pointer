@@ -1,4 +1,5 @@
 import cv2
+import uuid
 
 class Light:
     def __init__(self, x, y, area):
@@ -35,6 +36,7 @@ class LightTracker:
 
     def __init__(self):
         self.old_lights = []
+        self.guids = {}
         self.dictionary = {}
 
     def track(self, new_lights):
@@ -46,34 +48,27 @@ class LightTracker:
                 match = distances[0]
                 old_light = match[1]
                 remaining_old_lights.remove(old_light)
-                value = self.dictionary.pop(old_light, None)
+                guid = self.guids.pop(old_light, uuid.uuid4())
             else:
-                value = None
-            self.dictionary[new_light] = value
+                guid = uuid.uuid4()
+            self.guids[new_light] = guid
 
         for old_light in self.old_lights:
-            self.dictionary.pop(old_light, None)
+            guid = self.guids.pop(old_light, None)
+            if guid != None:
+                self.dictionary.pop(guid, None)
 
         self.old_lights = new_lights
 
-    def get(self, light):
-        self.raise_if_light_not_valid(light)
-        return self.dictionary.get(light)
+    def get(self, light_guid):
+        return self.dictionary.get(light_guid)
 
-    def set(self, light, value):
-        self.raise_if_light_not_valid(light)
-        self.set_if_present(light, value)
+    def set(self, light_guid, value):
+        if light_guid in self.guids.values():
+            self.dictionary[light_guid] = value
 
-    def set_if_present(self, light, value):
-        if light not in self.old_lights:
-            return False
-
-        self.dictionary[light] = value
-        return True
-
-    def raise_if_light_not_valid(self, light):
-        if light not in self.old_lights:
-            raise ValueError("The given light is not being tracked")
+    def state(self):
+        return [(self.guids[light], light, self.dictionary.get(self.guids[light])) for light in self.guids]
 
     @staticmethod
     def distance(light1, light2):
