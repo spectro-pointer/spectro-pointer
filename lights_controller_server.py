@@ -58,7 +58,7 @@ def serve_requests(controller):
         def exposed_get(self):
             return controller.get()
         
-        def exposed_set(light, state):
+        def exposed_set(self, light, state):
             controller.set(light, state)
 
     from rpyc.utils.server import ThreadedServer
