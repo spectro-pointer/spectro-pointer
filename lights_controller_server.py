@@ -55,7 +55,7 @@ def serve_requests(controller):
         def on_disconnect(self):
             pass
         
-        def exposed_get(self:)
+        def exposed_get(self):
             return controller.get()
         
         def exposed_set(light, state):
