@@ -33,9 +33,9 @@ class LightsController():
 
         return result
 
-    def set(self, light, state):
+    def set(self, light_guid, state):
         self.lock.acquire()
-        result = self.tracker.set_if_present(light, state)
+        result = self.tracker.set(light_guid, state)
         self.lock.release()
 
         return result
