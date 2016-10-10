@@ -8,7 +8,7 @@ while True:
     tracked_lights, im = controller.root.get()
     print "Found " + str(len(tracked_lights)) + " lights"
     for tracked_light in tracked_lights:
-      print "GUID: " + str(tracked_light['guid'])
+      print "GUID: " + str(tracked_light["guid"])
     im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
     cv2.imshow("foo", im)
     cv2.waitKey(100)

@@ -74,22 +74,24 @@ class Busca:
         # Capture current controller positions
         self.error_controller.capture_positions()
 
-        lights, tracker, im = self.lights_controller.root.get()
+        tracked_lights, im = self.lights_controller.root.get()
         im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
         # Assign a random color to new lights
-        for light in lights:
-            light_state = tracker.get(light)
+        for tracked_light in tracked_lights:
+            light_state = tracked_light["state"]
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
 
-                self.lights_controller.root.set(light, light_state)
-                tracker[light] = light_state
+                self.lights_controller.root.set(tracked_light["guid"], light_state)
+                tracked_light["state"] = light_state
 
         # Show all detected lights
-        for light in lights:
-            light_state = tracker.get(light)
+        for tracked_light in tracked_lights:
+            light = tracked_light["light"]
+            light_state = tracked_light["state"]
+
             color = (255, 0, 0) if light_state.tracked else light_state.color
             cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
@@ -97,43 +99,48 @@ class Busca:
 
         # Track all lights currently in range
         while True:
-            lights, tracker, im = self.lights_controller.root.get()
+            tracked_lights, im = self.lights_controller.root.get()
             im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Find back the light we are currently tracking
-            light_to_follow = None
-            for light in lights:
-                light_state = tracker.get(light)
+            tracked_light_to_follow = None
+            for tracked_light in tracked_lights:
+                light_state = tracked_light["state"]
+
                 if light_state != None and light_state.in_tracking:
-                    light_to_follow = light
+                    light_to_follow = tracked_light
                     break
 
             # If none, find a next light to track
-            if light_to_follow == None:
-                for light in lights:
-                    light_state = tracker.get(light)
+            if tracked_light_to_follow == None:
+                for tracked_light in tracked_lights:
+                    light = tracked_light["light"]
+                    light_state = tracked_light["state"]
+
                     if self.is_in_range(light) and light_state != None and not light_state.tracked:
-                        light_to_follow = light
+                        tracked_light_to_follow = tracked_light
                         light_state.in_tracking = True
-                        self.lights_controller.root.set(light, light_state)
+                        self.lights_controller.root.set(tracked_light["guid"], light_state)
                         break
 
             # If still none, we are done
-            if light_to_follow == None:
+            if tracked_light_to_follow == None:
                 break
 
             # Is the light to be tracked centered?
-            is_centered = self.error_controller.center(light_to_follow.x, light_to_follow.y)
+            is_centered = self.error_controller.center(tracked_light_to_follow["light"].x, tracked_light_to_follow["light"].y)
 
             if is_centered:
-                light_state = tracker.get(light_to_follow)
+                light_state = tracked_light_to_follow["state"]
                 light_state.in_tracking = False
                 light_state.tracked = True
-                self.lights_controller.root.set(light_to_follow, light_state)
+                self.lights_controller.root.set(tracked_light_to_follow["guid"], light_state)
 
             # Show the current image
-            for light in lights:
-                light_state = tracker.get(light)
+            for tracked_light in tracked_lights:
+                light = tracked_light["light"]
+                light_state = tracked_light["state"]
+
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
 
@@ -151,12 +158,14 @@ class Busca:
 
         # Restore controller positions incrementally
         while not self.error_controller.restore_positions():
-            lights, tracker, im = self.lights_controller.root.get()
+            tracked_lights, tracker, im = self.lights_controller.root.get()
             im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Show the current image
-            for light in lights:
-                light_state = tracker.get(light)
+            for tracked_light in tracked_lights:
+                light = tracked_light["light"]
+                light_state = tracked_light["state"]
+
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
 
@@ -206,7 +215,7 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
 MOTORES_IP = "127.0.0.1"
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
-lights_controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs" : True})
+lights_controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs": True, "allow_pickle": True})
 busca = Busca(lights_controller, ErrorController(azimuth_controller, elevation_controller))
 
 while True:

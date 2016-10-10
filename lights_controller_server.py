@@ -62,7 +62,7 @@ def serve_requests(controller):
             controller.set(light, state)
 
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(MyService, port = 8003, protocol_config = {"allow_public_attrs" : True})
+    t = ThreadedServer(MyService, port = 8003, protocol_config = {"allow_public_attrs": True, "allow_pickle": True})
     t.start()
 
 if __name__ == '__main__':
