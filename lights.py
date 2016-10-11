@@ -39,6 +39,8 @@ class LightTracker:
         self.guids = {}
 
     def track(self, new_lights):
+        updated_guids = {}
+
         remaining_old_lights = list(self.old_lights)
         for new_light in new_lights:
             distances = [(LightTracker.distance(new_light, old_light), old_light) for old_light in remaining_old_lights]
@@ -47,14 +49,12 @@ class LightTracker:
                 match = distances[0]
                 old_light = match[1]
                 remaining_old_lights.remove(old_light)
-                guid = self.guids.pop(old_light, str(uuid.uuid4()))
+                guid = self.guids[old_light]
             else:
                 guid = str(uuid.uuid4())
-            self.guids[new_light] = guid
+            updated_guids[new_light] = guid
 
-        for old_light in self.old_lights:
-            self.guids.pop(old_light, None)
-
+        self.guids = updated_guids
         self.old_lights = new_lights
 
     def state(self):
