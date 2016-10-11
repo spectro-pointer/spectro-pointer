@@ -29,7 +29,7 @@ class LightsController():
         self.lock.release()
 
         new_lights = len(set(new_guids) - set(old_guids))
-        print "Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " were are new"
+        print "Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " are new"
 
     def get(self):
         self.lock.acquire()
