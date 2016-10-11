@@ -23,8 +23,13 @@ class LightsController():
         self.lock.acquire()
         self.im = im
         self.lights = lights
+        old_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
         self.tracker.track(lights)
+        new_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
         self.lock.release()
+
+        new_lights = len(set(new_guids) - set(old_guids))
+        print "Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " were are new"
 
     def get(self):
         self.lock.acquire()
@@ -36,7 +41,6 @@ class LightsController():
 def track_lights(controller):
     print "Starting light tracker loop..."
     while True:
-        print "Processing a new frame"
         controller.capture_and_track()
 
 def serve_requests(controller):
