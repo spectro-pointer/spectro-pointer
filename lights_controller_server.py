@@ -36,6 +36,7 @@ class LightsController():
 def track_lights(controller):
     print "Starting light tracker loop..."
     while True:
+        print "Processing a new frame"
         controller.capture_and_track()
 
 def serve_requests(controller):
@@ -50,9 +51,6 @@ def serve_requests(controller):
         
         def exposed_get(self):
             return controller.get()
-        
-        def exposed_set(self, light, state):
-            controller.set(light, state)
 
     from rpyc.utils.server import ThreadedServer
     t = ThreadedServer(MyService, port = 8003, protocol_config = {"allow_public_attrs": True, "allow_pickle": True})
