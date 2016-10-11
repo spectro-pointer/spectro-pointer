@@ -6,6 +6,7 @@ class Light:
         self.x = x
         self.y = y
         self.area = area
+        self.last_seen = 0
 
 class LightDetector:
     MIN_BRIGHTNESS_THRESHOLD = 130
@@ -33,6 +34,7 @@ class LightTracker:
     MAX_RESIZING_FACTOR = 1.5
     DISPLACEMENT_WEIGHT = 0.8
     RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
+    MEMORY = 5
 
     def __init__(self):
         self.old_lights = []
@@ -40,6 +42,7 @@ class LightTracker:
 
     def track(self, new_lights):
         updated_guids = {}
+        updated_lights = []
 
         remaining_old_lights = list(self.old_lights)
         for new_light in new_lights:
@@ -54,8 +57,16 @@ class LightTracker:
                 guid = str(uuid.uuid4())
             updated_guids[new_light] = guid
 
+            new_light.last_seen = 0
+            updated_lights.append(new_light)
+
+        for untracked_old_light in remaining_old_lights:
+            untracked_old_light.last_seen += 1
+            if untracked_old_light.last_seen < self.MEMORY:
+                updated_lights.append(untracked_old_light)
+
         self.guids = updated_guids
-        self.old_lights = new_lights
+        self.old_lights = updated_lights
 
     def state(self):
         return [{"guid": self.guids[light], "light": light} for light in self.guids]

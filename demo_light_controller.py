@@ -1,4 +1,5 @@
 import xmlrpclib
+import time
 import numpy as np
 from lights import *
 from random import randint
@@ -12,7 +13,8 @@ tracked_lights, im_str = controller.get_lights_and_image()
 im_str = str(im_str)
 
 while True:
-    tracked_lights = controller.get_lights()
+    tracked_lights, im_str = controller.get_lights_and_image()
+    im_str = str(im_str)
     im = np.fromstring(im_str, dtype = np.uint8).reshape((480, 640, 3))
 
     # Purge old lights state
@@ -35,10 +37,13 @@ while True:
     # Show all detected lights
     for tracked_light in tracked_lights:
         light = tracked_light["light"]
-        color = state.get(tracked_light["guid"])
-        cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
+        if light["last_seen"] == 0:
+            color = state.get(tracked_light["guid"])
+            cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
 
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 
     cv2.imshow("foo", im)
     cv2.waitKey(100)
+
+    time.sleep(0.5)
