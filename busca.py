@@ -75,7 +75,7 @@ class Busca:
         # Capture current controller positions
         self.error_controller.capture_positions()
 
-        tracked_lights, im = self.lights_controller.root.get()
+        tracked_lights, im = self.lights_controller.root.get_lights_and_image()
         im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
         # Purge old lights state
@@ -106,7 +106,7 @@ class Busca:
 
         # Track all lights currently in range
         while True:
-            tracked_lights, im = self.lights_controller.root.get()
+            tracked_lights, im = self.lights_controller.root.get_lights_and_image()
             im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Find back the light we are currently tracking
@@ -163,7 +163,7 @@ class Busca:
 
         # Restore controller positions incrementally
         while not self.error_controller.restore_positions():
-            tracked_lights, im = self.lights_controller.root.get()
+            tracked_lights, im = self.lights_controller.root.get_lights_and_image()
             im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Show the current image

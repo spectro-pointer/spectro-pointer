@@ -7,9 +7,11 @@ controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs": Tru
 
 state = {}
 
+tracked_lights, im_str = controller.root.get_lights_and_image()
+
 while True:
-    tracked_lights, im = controller.root.get()
-    im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
+    tracked_lights = controller.root.get_lights()
+    im = np.fromstring(im_str, dtype = np.uint8).reshape((480, 640, 3))
 
     # Purge old lights state
     guids = [tracked_light["guid"] for tracked_light in tracked_lights]
@@ -37,4 +39,4 @@ while True:
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 
     cv2.imshow("foo", im)
-    cv2.waitKey(100)
+    cv2.waitKey(500)

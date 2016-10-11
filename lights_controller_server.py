@@ -31,9 +31,16 @@ class LightsController():
         new_lights = len(set(new_guids) - set(old_guids))
         print "Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " are new"
 
-    def get(self):
+    def get_lights_and_image(self):
         self.lock.acquire()
         result = (copy.deepcopy(self.tracker.state()), self.im.tostring())
+        self.lock.release()
+
+        return result
+
+    def get_lights(self):
+        self.lock.acquire()
+        result = copy.deepcopy(self.tracker.state())
         self.lock.release()
 
         return result
@@ -53,8 +60,11 @@ def serve_requests(controller):
         def on_disconnect(self):
             pass
         
-        def exposed_get(self):
-            return controller.get()
+        def exposed_get_lights_and_image(self):
+            return controller.get_lights_and_image()
+
+        def exposed_get_lights(self):
+            return controller.get_lights()
 
     from rpyc.utils.server import ThreadedServer
     t = ThreadedServer(MyService, port = 8003, protocol_config = {"allow_public_attrs": True, "allow_pickle": True})
