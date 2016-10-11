@@ -33,13 +33,6 @@ class LightsController():
 
         return result
 
-    def set(self, light_guid, state):
-        self.lock.acquire()
-        result = self.tracker.set(light_guid, state)
-        self.lock.release()
-
-        return result
-
 def track_lights(controller):
     print "Starting light tracker loop..."
     while True:

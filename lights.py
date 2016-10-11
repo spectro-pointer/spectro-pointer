@@ -29,7 +29,7 @@ class LightDetector:
         return lights
 
 class LightTracker:
-    MAX_DISPLACEMENT = 4
+    MAX_DISPLACEMENT = 6
     MAX_RESIZING_FACTOR = 1.5
     DISPLACEMENT_WEIGHT = 0.8
     RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
@@ -37,7 +37,6 @@ class LightTracker:
     def __init__(self):
         self.old_lights = []
         self.guids = {}
-        self.dictionary = {}
 
     def track(self, new_lights):
         remaining_old_lights = list(self.old_lights)
@@ -54,21 +53,12 @@ class LightTracker:
             self.guids[new_light] = guid
 
         for old_light in self.old_lights:
-            guid = self.guids.pop(old_light, None)
-            if guid != None:
-                self.dictionary.pop(guid, None)
+            self.guids.pop(old_light, None)
 
         self.old_lights = new_lights
 
-    def get(self, light_guid):
-        return self.dictionary.get(light_guid)
-
-    def set(self, light_guid, value):
-        if light_guid in self.guids.values():
-            self.dictionary[light_guid] = value
-
     def state(self):
-        return [{'guid': self.guids[light], 'light': light, 'state': self.dictionary.get(self.guids[light])} for light in self.guids]
+        return [{"guid": self.guids[light], "light": light} for light in self.guids]
 
     @staticmethod
     def distance(light1, light2):

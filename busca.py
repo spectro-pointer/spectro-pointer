@@ -53,6 +53,12 @@ class ErrorController:
         elevation_reached = elevation_controller.move_to(self.old_elevation, self.P_ELEVATION * self.MAX_MULTIPLIER)
         return azimuth_reached and elevation_reached
 
+class LightState:
+    def __init__(self, color):
+        self.in_tracking = False
+        self.tracked = False
+        self.color = color
+
 class Busca:
     WIDTH = 640
     HEIGHT = 480
@@ -60,6 +66,7 @@ class Busca:
     def __init__(self, lights_controller, error_controller):
         self.lights_controller = lights_controller
         self.error_controller = error_controller
+        self.state = {}
 
     def is_in_range(self, light):
         return light.x > (self.WIDTH / 2) - 10 and light.x < (self.WIDTH / 2) + 10 and light.y > 1 * (self.HEIGHT / 4) and light.y < 3 * (self.HEIGHT / 4)
@@ -71,22 +78,22 @@ class Busca:
         tracked_lights, im = self.lights_controller.root.get()
         im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
+        # TODO: Purge old lights state
+
         # Assign a random color to new lights
         for tracked_light in tracked_lights:
-            light_state = tracked_light["state"]
+            light_state = self.state[tracked_light["guid"]]
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
-                light_state = {"in_tracking": False, "tracked": False, "color": color}
-
-                self.lights_controller.root.set(tracked_light["guid"], light_state)
-                tracked_light["state"] = light_state
+                light_state = LightState(color)
+                self.state[tracked_light["guid"]] = light_state
 
         # Show all detected lights
         for tracked_light in tracked_lights:
             light = tracked_light["light"]
-            light_state = tracked_light["state"]
+            light_state = self.state[tracked_light["guid"]]
 
-            color = (255, 0, 0) if light_state["tracked"] else light_state["color"]
+            color = (255, 0, 0) if light_state.tracked else light_state.color
             cv2.circle(im, (light.x, light.y), 15, color, 3)
         cv2.imshow("busca", im)
         cv2.waitKey(100)
@@ -99,9 +106,9 @@ class Busca:
             # Find back the light we are currently tracking
             tracked_light_to_follow = None
             for tracked_light in tracked_lights:
-                light_state = tracked_light["state"]
+                light_state = self.state[tracked_light["guid"]]
 
-                if light_state != None and light_state["in_tracking"]:
+                if light_state != None and light_state.in_tracking:
                     light_to_follow = tracked_light
                     break
 
@@ -109,12 +116,11 @@ class Busca:
             if tracked_light_to_follow == None:
                 for tracked_light in tracked_lights:
                     light = tracked_light["light"]
-                    light_state = tracked_light["state"]
+                    light_state = self.state[tracked_light["guid"]]
 
-                    if self.is_in_range(light) and light_state != None and not light_state["tracked"]:
+                    if self.is_in_range(light) and light_state != None and not light_state.tracked:
                         tracked_light_to_follow = tracked_light
-                        light_state["in_tracking"] = True
-                        self.lights_controller.root.set(tracked_light["guid"], light_state)
+                        light_state.in_tracking = True
                         break
 
             # If still none, we are done
@@ -125,25 +131,24 @@ class Busca:
             is_centered = self.error_controller.center(tracked_light_to_follow["light"].x, tracked_light_to_follow["light"].y)
 
             if is_centered:
-                light_state = tracked_light_to_follow["state"]
-                light_state["in_tracking"] = False
-                light_state["tracked"] = True
-                self.lights_controller.root.set(tracked_light_to_follow["guid"], light_state)
+                light_state = self.state[tracked_light_to_follow["guid"]]
+                light_state.in_tracking = False
+                light_state.tracked = True
 
             # Show the current image
             for tracked_light in tracked_lights:
                 light = tracked_light["light"]
-                light_state = tracked_light["state"]
+                light_state = self.state[tracked_light["guid"]]
 
                 if light_state != None:
-                    thickness = 7 if light_state["in_tracking"] else 3
+                    thickness = 7 if light_state.in_tracking else 3
 
-                    if light_state["in_tracking"]:
+                    if light_state.in_tracking:
                         color = (0, 0, 255)
-                    elif light_state["tracked"]:
+                    elif light_state.tracked:
                         color = (255, 0, 0)
                     else:
-                        color = light_state["color"]
+                        color = light_state.color
 
                     cv2.circle(im, (light.x, light.y), 15, color, thickness)
 
@@ -158,17 +163,17 @@ class Busca:
             # Show the current image
             for tracked_light in tracked_lights:
                 light = tracked_light["light"]
-                light_state = tracked_light["state"]
+                light_state = self.state[tracked_light["guid"]]
 
                 if light_state != None:
-                    thickness = 7 if light_state["in_tracking"] else 3
+                    thickness = 7 if light_state.in_tracking else 3
 
-                    if light_state["in_tracking"]:
+                    if light_state.in_tracking:
                         color = (0, 0, 255)
-                    elif light_state["tracked"]:
+                    elif light_state.tracked:
                         color = (255, 0, 0)
                     else:
-                        color = light_state["color"]
+                        color = light_state.color
 
                     cv2.circle(im, (light.x, light.y), 15, color, thickness)
 
