@@ -1,13 +1,11 @@
 import cv2
-import xmlrpclib
 import copy
 import threading
 import time
-import rpyc
-import numpy as np
 
 from lights import *
 from camera import Camera
+from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class LightsController():
     def __init__(self, camera, detector, tracker):
@@ -51,24 +49,11 @@ def track_lights(controller):
         controller.capture_and_track()
 
 def serve_requests(controller):
-    print "Initializing the RPyC server..."
-
-    class MyService(rpyc.Service):
-        def on_connect(self):
-            pass
-
-        def on_disconnect(self):
-            pass
-        
-        def exposed_get_lights_and_image(self):
-            return controller.get_lights_and_image()
-
-        def exposed_get_lights(self):
-            return controller.get_lights()
-
-    from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(MyService, port = 8003, protocol_config = {"allow_public_attrs": True, "allow_pickle": True})
-    t.start()
+    print "Initializing the XML-RPC server..."
+    server = SimpleXMLRPCServer(("0.0.0.0", 8003))
+    server.register_instance(controller)
+    print "Waiting for incoming requests..."
+    server.serve_forever()
 
 if __name__ == '__main__':
     controller = LightsController(Camera(), LightDetector(), LightTracker())

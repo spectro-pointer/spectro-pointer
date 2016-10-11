@@ -47,9 +47,9 @@ class LightTracker:
                 match = distances[0]
                 old_light = match[1]
                 remaining_old_lights.remove(old_light)
-                guid = self.guids.pop(old_light, uuid.uuid4())
+                guid = self.guids.pop(old_light, str(uuid.uuid4()))
             else:
-                guid = uuid.uuid4()
+                guid = str(uuid.uuid4())
             self.guids[new_light] = guid
 
         for old_light in self.old_lights:
