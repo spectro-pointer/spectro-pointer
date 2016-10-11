@@ -78,11 +78,17 @@ class Busca:
         tracked_lights, im = self.lights_controller.root.get()
         im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
-        # TODO: Purge old lights state
+        # Purge old lights state
+        guids = [tracked_light["guid"] for tracked_light in tracked_lights]
+        new_state = {}
+        for guid in self.state:
+            if guid in guids:
+                new_state[guid] = self.state[guid]
+        self.state = new_state
 
         # Assign a random color to new lights
         for tracked_light in tracked_lights:
-            light_state = self.state[tracked_light["guid"]]
+            light_state = self.state.get(tracked_light["guid"])
             if light_state == None:
                 color = (randint(100, 255), randint(100, 255), randint(100, 255))
                 light_state = LightState(color)
@@ -91,7 +97,7 @@ class Busca:
         # Show all detected lights
         for tracked_light in tracked_lights:
             light = tracked_light["light"]
-            light_state = self.state[tracked_light["guid"]]
+            light_state = self.state.get(tracked_light["guid"])
 
             color = (255, 0, 0) if light_state.tracked else light_state.color
             cv2.circle(im, (light.x, light.y), 15, color, 3)
@@ -106,7 +112,7 @@ class Busca:
             # Find back the light we are currently tracking
             tracked_light_to_follow = None
             for tracked_light in tracked_lights:
-                light_state = self.state[tracked_light["guid"]]
+                light_state = self.state.get(tracked_light["guid"])
 
                 if light_state != None and light_state.in_tracking:
                     light_to_follow = tracked_light
@@ -116,7 +122,7 @@ class Busca:
             if tracked_light_to_follow == None:
                 for tracked_light in tracked_lights:
                     light = tracked_light["light"]
-                    light_state = self.state[tracked_light["guid"]]
+                    light_state = self.state.get(tracked_light["guid"])
 
                     if self.is_in_range(light) and light_state != None and not light_state.tracked:
                         tracked_light_to_follow = tracked_light
@@ -131,14 +137,14 @@ class Busca:
             is_centered = self.error_controller.center(tracked_light_to_follow["light"].x, tracked_light_to_follow["light"].y)
 
             if is_centered:
-                light_state = self.state[tracked_light_to_follow["guid"]]
+                light_state = self.state.get(tracked_light_to_follow["guid"])
                 light_state.in_tracking = False
                 light_state.tracked = True
 
             # Show the current image
             for tracked_light in tracked_lights:
                 light = tracked_light["light"]
-                light_state = self.state[tracked_light["guid"]]
+                light_state = self.state.get(tracked_light["guid"])
 
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
@@ -157,13 +163,13 @@ class Busca:
 
         # Restore controller positions incrementally
         while not self.error_controller.restore_positions():
-            tracked_lights, tracker, im = self.lights_controller.root.get()
+            tracked_lights, im = self.lights_controller.root.get()
             im = np.fromstring(im, dtype = np.uint8).reshape((480, 640, 3))
 
             # Show the current image
             for tracked_light in tracked_lights:
                 light = tracked_light["light"]
-                light_state = self.state[tracked_light["guid"]]
+                light_state = self.state.get(tracked_light["guid"])
 
                 if light_state != None:
                     thickness = 7 if light_state.in_tracking else 3
@@ -211,10 +217,10 @@ def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
             if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.001:
                 raise ValueError("Unexpected controller positions: azimuth " + str(azimuth_controller.position()) + " vs " + str(old_azimuth) + ", elevation: " + str(elevation_controller.position()) + " vs " + str(old_elevation))
 
-MOTORES_IP = "127.0.0.1"
+MOTORES_IP = "192.168.0.100"
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
-lights_controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs": True, "allow_pickle": True})
+lights_controller = rpyc.connect("127.0.0.1", 8003, config = {"allow_public_attrs": True})
 busca = Busca(lights_controller, ErrorController(azimuth_controller, elevation_controller))
 
 while True:
