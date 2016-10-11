@@ -31,7 +31,7 @@ class LightsController():
 
     def get_lights_and_image(self):
         self.lock.acquire()
-        result = (copy.deepcopy(self.tracker.state()), self.im.tostring())
+        result = (copy.deepcopy(self.tracker.state()), xmlrpclib.Binary(self.im.tostring()))
         self.lock.release()
 
         return result
