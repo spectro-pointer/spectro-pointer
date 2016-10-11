@@ -63,6 +63,7 @@ class LightTracker:
         for untracked_old_light in remaining_old_lights:
             untracked_old_light.last_seen += 1
             if untracked_old_light.last_seen < self.MEMORY:
+                updated_guids[untracked_old_light] = self.guids[untracked_old_light]
                 updated_lights.append(untracked_old_light)
 
         self.guids = updated_guids
