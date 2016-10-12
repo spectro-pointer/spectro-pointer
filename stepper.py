@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 class Stepper:
-    GPIO_SLEEP = 0.5 / 1000.0
+    GPIO_SLEEP = 2.0 / 1000.0
 
     def __init__(self, total_steps, direction_gpio, pulse_gpio):
         self.__total_steps = total_steps
