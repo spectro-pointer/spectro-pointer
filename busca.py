@@ -1,4 +1,3 @@
-import cv2
 import xmlrpclib
 import time
 import rpyc
@@ -49,15 +48,13 @@ class ErrorController:
         self.old_elevation = self.elevation_controller.position()
 
     def restore_positions(self):
-        azimuth_reached = azimuth_controller.move_to(self.old_azimuth, self.P_AZIMUTH * self.MAX_MULTIPLIER)
-        elevation_reached = elevation_controller.move_to(self.old_elevation, self.P_ELEVATION * self.MAX_MULTIPLIER)
-        return azimuth_reached and elevation_reached
+        azimuth_controller.move_to(self.old_azimuth)
+        elevation_controller.move_to(self.old_elevation)
 
 class LightState:
-    def __init__(self, color):
+    def __init__(self):
         self.in_tracking = False
         self.tracked = False
-        self.color = color
 
 class Busca:
     WIDTH = 640
@@ -69,16 +66,15 @@ class Busca:
         self.state = {}
 
     def is_in_range(self, light):
-        return light["x"] > (self.WIDTH / 2) - 10 and light["x"] < (self.WIDTH / 2) + 10 and light["y"] > 1 * (self.HEIGHT / 4) and light["y"] < 3 * (self.HEIGHT / 4)
+        return light["x"] > (self.WIDTH / 2) - 30 and light["x"] < (self.WIDTH / 2) + 30 and light["y"] > 1 * (self.HEIGHT / 4) and light["y"] < 3 * (self.HEIGHT / 4)
 
     def process(self):
         # Capture current controller positions
         self.error_controller.capture_positions()
 
-        tracked_lights, im = self.lights_controller.get_lights_and_image()
-        im = np.fromstring(str(im), dtype = np.uint8).reshape((480, 640, 3))
+        tracked_lights = self.lights_controller.get_lights()
 
-        # Purge old lights state
+        # Purge old state
         guids = [tracked_light["guid"] for tracked_light in tracked_lights]
         new_state = {}
         for guid in self.state:
@@ -86,28 +82,14 @@ class Busca:
                 new_state[guid] = self.state[guid]
         self.state = new_state
 
-        # Assign a random color to new lights
+        # Initialize state for all new lights
         for tracked_light in tracked_lights:
-            light_state = self.state.get(tracked_light["guid"])
-            if light_state == None:
-                color = (randint(100, 255), randint(100, 255), randint(100, 255))
-                light_state = LightState(color)
-                self.state[tracked_light["guid"]] = light_state
-
-        # Show all detected lights
-        for tracked_light in tracked_lights:
-            light = tracked_light["light"]
-            light_state = self.state.get(tracked_light["guid"])
-
-            color = (255, 0, 0) if light_state.tracked else light_state.color
-            cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
-        cv2.imshow("busca", im)
-        cv2.waitKey(100)
+            if tracked_light["guid"] not in self.state:
+                self.state[tracked_light["guid"]] = LightState()
 
         # Track all lights currently in range
         while True:
-            tracked_lights, im = self.lights_controller.get_lights_and_image()
-            im = np.fromstring(str(im), dtype = np.uint8).reshape((480, 640, 3))
+            tracked_lights = self.lights_controller.get_lights()
 
             # Find back the light we are currently tracking
             tracked_light_to_follow = None
@@ -141,50 +123,8 @@ class Busca:
                 light_state.in_tracking = False
                 light_state.tracked = True
 
-            # Show the current image
-            for tracked_light in tracked_lights:
-                light = tracked_light["light"]
-                light_state = self.state.get(tracked_light["guid"])
-
-                if light_state != None:
-                    thickness = 7 if light_state.in_tracking else 3
-
-                    if light_state.in_tracking:
-                        color = (0, 0, 255)
-                    elif light_state.tracked:
-                        color = (255, 0, 0)
-                    else:
-                        color = light_state.color
-
-                    cv2.circle(im, (light["x"], light["y"]), 15, color, thickness)
-
-            cv2.imshow("busca", im)
-            cv2.waitKey(100)
-
         # Restore controller positions incrementally
-        while not self.error_controller.restore_positions():
-            tracked_lights, im = self.lights_controller.get_lights_and_image()
-            im = np.fromstring(str(im), dtype = np.uint8).reshape((480, 640, 3))
-
-            # Show the current image
-            for tracked_light in tracked_lights:
-                light = tracked_light["light"]
-                light_state = self.state.get(tracked_light["guid"])
-
-                if light_state != None:
-                    thickness = 7 if light_state.in_tracking else 3
-
-                    if light_state.in_tracking:
-                        color = (0, 0, 255)
-                    elif light_state.tracked:
-                        color = (255, 0, 0)
-                    else:
-                        color = light_state.color
-
-                    cv2.circle(im, (light["x"], light["y"]), 15, color, thickness)
-
-            cv2.imshow("busca", im)
-            cv2.waitKey(100)
+        self.error_controller.restore_positions()
 
         return len(tracked_lights)
 
