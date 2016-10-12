@@ -30,7 +30,7 @@ class LightDetector:
         return lights
 
 class LightTracker:
-    MAX_DISPLACEMENT = 10
+    MAX_DISPLACEMENT = 30
     MAX_RESIZING_FACTOR = 1.5
     DISPLACEMENT_WEIGHT = 0.8
     RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
