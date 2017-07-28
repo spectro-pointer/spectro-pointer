@@ -1,5 +1,6 @@
 import cv2
 import uuid
+import numpy as np
 
 class Light:
     def __init__(self, x, y, area):
@@ -26,8 +27,8 @@ class LightDetector:
                 for point in contour:
                     x.append(point[0][0])
                     y.append(point[0][1])
-                x = sum(x) / len(x)
-                y = sum(y) / len(y)
+                x = np.int32(np.mean(x)).item()
+                y = np.int32(np.mean(y)).item()
 
                 lights.append(Light(x, y, area))
 
