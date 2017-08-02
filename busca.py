@@ -10,7 +10,7 @@ class ErrorController:
     ERROR_TOLERANCE = 1
     P_AZIMUTH = 5 # 30 is ~4px
     P_ELEVATION = 0.0003 # 0.0025 is ~3 px
-    MAX_MULTIPLIER = 10
+    MAX_MULTIPLIER = 8
 
     def __init__(self, azimuth_controller, elevation_controller):
         self.azimuth_controller = azimuth_controller
@@ -43,14 +43,6 @@ class ErrorController:
 
         return False
 
-    def capture_positions(self):
-        self.old_azimuth = self.azimuth_controller.position()
-        self.old_elevation = self.elevation_controller.position()
-
-    def restore_positions(self):
-        azimuth_controller.move_to(self.old_azimuth)
-        elevation_controller.move_to(self.old_elevation)
-
 class LightState:
     def __init__(self):
         self.in_tracking = False
@@ -60,22 +52,13 @@ class Busca:
     WIDTH = 640
     HEIGHT = 480
 
-    def __init__(self, lights_controller, error_controller):
-        self.lights_controller = lights_controller
+    def __init__(self, error_controller):
         self.error_controller = error_controller
         self.state = {}
 
-    def is_in_range(self, light):
-        return light["x"] > (self.WIDTH / 2) - 30 and light["x"] < (self.WIDTH / 2) + 30 and light["y"] > 1 * (self.HEIGHT / 4) and light["y"] < 3 * (self.HEIGHT / 4)
-
-    def process(self):
-        # Capture current controller positions
-        self.error_controller.capture_positions()
-
-        tracked_lights = self.lights_controller.get_lights()
-
+    def update_state(self, lights):
         # Purge old state
-        guids = [tracked_light["guid"] for tracked_light in tracked_lights]
+        guids = [light["guid"] for light in lights]
         new_state = {}
         for guid in self.state:
             if guid in guids:
@@ -83,79 +66,95 @@ class Busca:
         self.state = new_state
 
         # Initialize state for all new lights
-        for tracked_light in tracked_lights:
-            if tracked_light["guid"] not in self.state:
-                self.state[tracked_light["guid"]] = LightState()
+        for light in lights:
+            if light["guid"] not in self.state:
+                self.state[light["guid"]] = LightState()
 
-        # Track all lights currently in range
-        while True:
-            tracked_lights = self.lights_controller.get_lights()
+    def get_tracked_light(self, lights):
+        for light in lights:
+            light_state = self.state.get(light["guid"])
 
-            # Find back the light we are currently tracking
-            tracked_light_to_follow = None
-            for tracked_light in tracked_lights:
-                light_state = self.state.get(tracked_light["guid"])
+            if light_state != None and light_state.in_tracking:
+                return light
 
-                if light_state != None and light_state.in_tracking:
-                    light_to_follow = tracked_light
-                    break
+        return None
 
-            # If none, find a next light to track
-            if tracked_light_to_follow == None:
-                for tracked_light in tracked_lights:
-                    light = tracked_light["light"]
-                    light_state = self.state.get(tracked_light["guid"])
+    def get_new_light_to_track(self, lights):
+        self.update_state(lights)
 
-                    if self.is_in_range(light) and light_state != None and not light_state.tracked:
-                        tracked_light_to_follow = tracked_light
-                        light_state.in_tracking = True
-                        break
+        right_most_light_to_track = None
 
-            # If still none, we are done
-            if tracked_light_to_follow == None:
-                break
+        for light in lights:
+            light_x = light["light"]["x"]
+            light_state = self.state.get(light["guid"])
 
-            # Is the light to be tracked centered?
-            is_centered = self.error_controller.center(tracked_light_to_follow["light"]["x"], tracked_light_to_follow["light"]["y"])
+            if (light["light"]["last_seen"] == 0 and light_x <= self.WIDTH / 2 and (not light_state.tracked) and
+                    (right_most_light_to_track == None or light_x > right_most_light_to_track["light"]["x"])):
+                right_most_light_to_track = light
 
-            if is_centered:
-                light_state = self.state.get(tracked_light_to_follow["guid"])
-                light_state.in_tracking = False
-                light_state.tracked = True
+        if right_most_light_to_track == None:
+            return None
 
-        # Restore controller positions incrementally
-        self.error_controller.restore_positions()
+        light_state = self.state.get(right_most_light_to_track["guid"])
+        light_state.in_tracking = True
 
-        return len(tracked_lights)
+        return right_most_light_to_track
 
-def scan(azimuth_controller, elevation_controller, busca, elevation_steps):
-    for elevation in range(0, elevation_steps):
-        if elevation < 2:
+    def center_tracked_light(self, lights):
+        self.update_state(lights)
+
+        tracked_light = self.get_tracked_light(lights)
+
+        if tracked_light == None:
+            print "No light to be tracked..."
+            return False
+
+        if tracked_light["light"]["last_seen"] > 0:
+            print "Waiting for tracked light %s to come back..." % (tracked_light["guid"])
+            time.sleep(0.2)
+            return True
+
+        print "Tracking light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
+
+        is_centered = self.error_controller.center(tracked_light["light"]["x"], tracked_light["light"]["y"])
+
+        if is_centered:
+            print "Centered on light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
+            light_state = self.state.get(tracked_light["guid"])
+            light_state.in_tracking = False
+            light_state.tracked = True
+
+        return True
+
+def scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps):
+    for elevation_step in range(0, elevation_steps):
+        if elevation_step != 2:
             continue
 
-        elevation_controller.move_to(elevation*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0)
+        elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
+        elevation_controller.move_to(elevation)
 
-        scans_without_light = 0
-        for azimuth in range(0, azimuth_controller.total_steps(), 40):
-            azimuth_controller.move_left(40)
+        azimuth_controller.move_to(0)
 
-            print "@ elevation " + str(elevation_controller.position()) + " & azimuth " + str(azimuth_controller.position())
-            if scans_without_light > 10 and scans_without_light % 12 != 0:
-                scans_without_light += 1
-                print "  skipped because last " + str(scans_without_light) + " scans where without any lights"
-                continue
+        while True:
+            print "@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
+
+            while True:
+                lights = lights_controller.get_lights()
+                if busca.get_new_light_to_track(lights) == None:
+                    break
+
+                while True:
+                    lights = lights_controller.get_lights()
+                    if not busca.center_tracked_light(lights):
+                        break
+
+                elevation_controller.move_to(elevation)
 
             old_azimuth = azimuth_controller.position()
-            old_elevation = elevation_controller.position()
-
-            number_of_lights = busca.process()
-            if number_of_lights == 0:
-                scans_without_light += 1
-            else:
-                scans_without_light = 0 
-
-            if azimuth_controller.position() != old_azimuth or abs(elevation_controller.position() - old_elevation) > 0.001:
-                raise ValueError("Unexpected controller positions: azimuth " + str(azimuth_controller.position()) + " vs " + str(old_azimuth) + ", elevation: " + str(elevation_controller.position()) + " vs " + str(old_elevation))
+            azimuth_controller.move_left(120)
+            if azimuth_controller.position() < old_azimuth:
+                break
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
@@ -164,7 +163,7 @@ azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 lights_controller = xmlrpclib.ServerProxy("http://" + BUSCA_IP + ":8003")
 
-busca = Busca(lights_controller, ErrorController(azimuth_controller, elevation_controller))
+busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 
 while True:
-    scan(azimuth_controller, elevation_controller, busca, elevation_steps = 4)
+    scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps = 4)
