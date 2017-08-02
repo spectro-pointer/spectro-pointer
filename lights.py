@@ -39,7 +39,7 @@ class LightTracker:
     MAX_RESIZING_FACTOR = 1.5
     DISPLACEMENT_WEIGHT = 0.8
     RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
-    MEMORY = 5
+    MEMORY = 10
 
     def __init__(self):
         self.old_lights = []
