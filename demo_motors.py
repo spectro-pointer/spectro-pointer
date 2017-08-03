@@ -8,8 +8,10 @@ azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 
 print "Moving to the blue LED.."
 
-elevation_controller.move_to(0.6812)
-azimuth_controller.move_to(17490)
+elevation_controller.move_to(0.684)
+azimuth_controller.move_to(17510)
+#azimuth_controller.move_to(17370)
+#azimuth_controller.move_to(17290)
 
 print "Done, current position:"
 print "  Elevation: %s" % (elevation_controller.position())
