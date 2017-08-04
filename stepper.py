@@ -39,7 +39,7 @@ class Stepper:
             self.__last_direction = direction
             self.compensate_backlash()
 
-        self.pulse()
+        self.pulse_gpio()
 
         if direction:
           self.__position += 1
@@ -49,9 +49,9 @@ class Stepper:
 
     def compensate_backlash(self):
         for i in range(self.__backlash_steps):
-            self.pulse()
+            self.pulse_gpio()
 
-    def pulse(self):
+    def pulse_gpio(self):
         GPIO.output(self.__pulse_gpio, False)
         time.sleep(self.GPIO_SLEEP)
         GPIO.output(self.__pulse_gpio, True)
