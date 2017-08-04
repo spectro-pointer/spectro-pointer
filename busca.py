@@ -88,7 +88,7 @@ class Busca:
             light_x = light["light"]["x"]
             light_state = self.state.get(light["guid"])
 
-            if (light["light"]["last_seen"] == 0 and light_x <= self.WIDTH / 2 and (not light_state.tracked) and
+            if (light_x <= self.WIDTH / 2 and (not light_state.tracked) and
                     (right_most_light_to_track == None or light_x > right_most_light_to_track["light"]["x"])):
                 right_most_light_to_track = light
 
@@ -108,10 +108,6 @@ class Busca:
         if tracked_light == None:
             print "  The tracked light disappeared"
             return True
-
-        if tracked_light["light"]["last_seen"] > 0:
-            print "Waiting for tracked light %s to come back..." % (tracked_light["guid"])
-            return False
 
         print "Tracking light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
 

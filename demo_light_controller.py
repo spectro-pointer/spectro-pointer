@@ -37,9 +37,8 @@ while True:
     # Show all detected lights
     for tracked_light in tracked_lights:
         light = tracked_light["light"]
-        if light["last_seen"] == 0:
-            color = state.get(tracked_light["guid"])
-            cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
+        color = state.get(tracked_light["guid"])
+        cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
 
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 

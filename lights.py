@@ -7,7 +7,6 @@ class Light:
         self.x = x
         self.y = y
         self.area = area
-        self.last_seen = 0
 
 class LightDetector:
     MIN_BRIGHTNESS_THRESHOLD = 87
@@ -39,7 +38,6 @@ class LightTracker:
     MAX_RESIZING_FACTOR = 1.5
     DISPLACEMENT_WEIGHT = 0.8
     RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
-    MEMORY = 10
 
     def __init__(self):
         self.old_lights = []
@@ -49,27 +47,18 @@ class LightTracker:
         updated_guids = {}
         updated_lights = []
 
-        remaining_old_lights = list(self.old_lights)
         for new_light in new_lights:
-            distances = [(LightTracker.distance(new_light, old_light), old_light) for old_light in remaining_old_lights]
+            distances = [(LightTracker.distance(new_light, old_light), old_light) for old_light in self.old_lights]
             distances.sort(key = lambda t: t[0])
             if len(distances) > 0 and distances[0][0] < 1.0:
                 match = distances[0]
                 old_light = match[1]
-                remaining_old_lights.remove(old_light)
                 guid = self.guids[old_light]
             else:
                 guid = str(uuid.uuid4())
             updated_guids[new_light] = guid
 
-            new_light.last_seen = 0
             updated_lights.append(new_light)
-
-        for untracked_old_light in remaining_old_lights:
-            untracked_old_light.last_seen += 1
-            if untracked_old_light.last_seen < self.MEMORY:
-                updated_guids[untracked_old_light] = self.guids[untracked_old_light]
-                updated_lights.append(untracked_old_light)
 
         self.guids = updated_guids
         self.old_lights = updated_lights
