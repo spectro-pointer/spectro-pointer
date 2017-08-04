@@ -61,7 +61,7 @@ class LightTracker:
             guid = self.guids[old_light]
             updated_guids[new_light] = guid
             updated_lights.append(new_light)
-            matched_new_lights.append(new_light)
+            matched_new_lights.add(new_light)
 
         # Add new lights
         unmatched_new_lights = set(new_lights) - matched_new_lights
