@@ -12,10 +12,11 @@ class AzimuthController:
     LEFT_DIRECTION = True
     RIGHT_DIRECTION = not LEFT_DIRECTION
     HOMING_DIRECTION = LEFT_DIRECTION
+    BACKLASH_STEPS = 24
 
     def __init__(self):
         GPIO.setup(self.HOME_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-        self.__stepper = Stepper(self.MICROSTEPS * self.GEAR_RATIO, self.DIRECTION_GPIO, self.PULSE_GPIO)
+        self.__stepper = Stepper(self.MICROSTEPS * self.GEAR_RATIO, self.DIRECTION_GPIO, self.PULSE_GPIO, self.BACKLASH_STEPS)
 
         steps = 0
         while self.is_home():
