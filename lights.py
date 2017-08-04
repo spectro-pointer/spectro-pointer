@@ -44,6 +44,7 @@ class LightTracker:
     def track(self, new_lights):
         updated_guids = {}
         updated_lights = []
+        matched_new_lights = {}
 
         # Add tracked lights
         for old_light in self.old_lights:
@@ -60,13 +61,14 @@ class LightTracker:
             guid = self.guids[old_light]
             updated_guids[new_light] = guid
             updated_lights.append(new_light)
+            matched_new_lights.append(new_light)
 
         # Add new lights
-        for new_light in new_lights:
-            if new_light not in updated_lights:
-                guid = str(uuid.uuid4())
-                updated_guids[new_light] = guid
-                updated_lights.append(new_light)
+        unmatched_new_lights = set(new_lights) - matched_new_lights
+        for unmatched_new_light in unmatched_new_lights:
+            guid = str(uuid.uuid4())
+            updated_guids[new_light] = guid
+            updated_lights.append(new_light)
 
         self.guids = updated_guids
         self.old_lights = updated_lights
