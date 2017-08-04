@@ -1,6 +1,7 @@
 import cv2
 import uuid
 import numpy as np
+import math
 
 class Light:
     def __init__(self, x, y, area):
@@ -45,11 +46,13 @@ class LightTracker:
         updated_lights = []
 
         for new_light in new_lights:
-            distances = [(LightTracker.distance(new_light, old_light), old_light) for old_light in self.old_lights]
-            distances.sort(key = lambda t: t[0])
-            if len(distances) > 0 and distances[0][0] < 1.0:
-                match = distances[0]
-                old_light = match[1]
+            best_match = None
+            for old_light in self.old_lights:
+                d = (new_light.x - old_light.x)**2 + (new_light.y - new_light.y)**2
+                if best_match == None or d < best_match[0]:
+                    best_match = [d, old_light]
+            if best_match != None and math.sqrt(best_match[0]) / self.MAX_DISPLACEMENT < 1.0:
+                old_light = best_match[1]
                 guid = self.guids[old_light]
             else:
                 guid = str(uuid.uuid4())
@@ -62,9 +65,3 @@ class LightTracker:
 
     def state(self):
         return [{"guid": self.guids[light], "light": light} for light in self.guids]
-
-    @staticmethod
-    def distance(light1, light2):
-        displacement = cv2.norm((light1.x, light1.y), (light2.x, light2.y))
-        displacement_ratio = displacement / LightTracker.MAX_DISPLACEMENT
-        return displacement_ratio
