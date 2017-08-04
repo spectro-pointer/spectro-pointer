@@ -45,20 +45,28 @@ class LightTracker:
         updated_guids = {}
         updated_lights = []
 
+        # Add tracked lights
         for old_light in self.old_lights:
             best_match = None
             for new_light in new_lights:
                 d = (new_light.x - old_light.x)**2 + (new_light.y - new_light.y)**2
                 if best_match == None or d < best_match[0]:
-                    best_match = [d, old_light]
-            if best_match != None and math.sqrt(best_match[0]) / self.MAX_DISPLACEMENT < 1.0:
-                old_light = best_match[1]
-                guid = self.guids[old_light]
-            else:
-                guid = str(uuid.uuid4())
-            updated_guids[new_light] = guid
+                    best_match = [d, new_light]
 
+            if best_match == None or math.sqrt(best_match[0]) / self.MAX_DISPLACEMENT >= 1.0:
+                continue
+
+            new_light = best_match[1]
+            guid = self.guids[old_light]
+            updated_guids[new_light] = guid
             updated_lights.append(new_light)
+
+        # Add new lights
+        for new_light in new_lights:
+            if new_light not in updated_lights:
+                guid = str(uuid.uuid4())
+                updated_guids[new_light] = guid
+                updated_lights.append(new_light)
 
         self.guids = updated_guids
         self.old_lights = updated_lights
