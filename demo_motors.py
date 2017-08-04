@@ -46,10 +46,10 @@ getch = _Getch()
 while True:
   c = getch()
   if c == 'w':
-    p = elevation_controller.position() - 0.003
+    p = elevation_controller.position() - 0.0015
     elevation_controller.move_to(p)
   elif c == 's':
-    p = elevation_controller.position() + 0.003
+    p = elevation_controller.position() + 0.0015
     elevation_controller.move_to(p)
   elif c == 'a':
     azimuth_controller.move_left(5)
