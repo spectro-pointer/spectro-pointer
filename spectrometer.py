@@ -386,33 +386,28 @@ class Spectrometer(object):
 
 if __name__ == '__main__':
 	integration_time = 1 # [seconds]
-	location = '/home/pi/spectrometer/spectrums'
-#	prefix = 'spectrum'
-	
+
 	spectrometer = Spectrometer(ip_address, port)
 	print('Version:', spectrometer.get_version())
 	print('Serial:', spectrometer.get_serial())
 	spectrometer.set_integration(integration_time*1e6)
 	print('Integration time: %s µs' % spectrometer.get_integration())
 
-	# 1) start/stop sequence
-#	spectrometer.set_save_location(location)
-#	print('Save location:', spectrometer.get_save_location())
-#	spectrometer.set_prefix(prefix)
-#	print('File prefix:', spectrometer.get_prefix())
-	
-#	print('Start Sequence:', spectrometer.start_sequence())
-#	sleep(integration_time+1)
-#	print('Stop Sequence:', spectrometer.stop_sequence())
+	wavelengths = spectrometer.get_wavelengths()
+	wavelengths = [float(v) for v in wavelengths.split()]
 
-	# 2) save_spectrum
-	file = os.path.join(location, '%s.txt' % datetime.strftime(datetime.now(), '%d-%m-%Y_%H:%M:%S'))
-	print('Saving spectrum:', file)
-	spectrometer.save_spectrum(file)
-	# 3) get_spectrum
-#	print('Getting spectrum...')
-#	print('Spectrum:')
-#	spectrum = spectrometer.get_spectrum()
-#	spectrum = [v for v in spectrum.split()]
+	print('Getting spectrum...')
+	print('Spectrum:')
+	spectrum = spectrometer.get_spectrum()
+	spectrum = [int(v) for v in spectrum.split()]
 
 	print('done.\nCurrent status:', spectrometer.get_current_status())
+
+	import matplotlib.pyplot as plt
+	plt.plot(wavelengths, spectrum)
+	plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
+	plt.ylim(1000, 16500)
+	plt.ylabel('Intensity')
+	plt.xlabel('Wavelength')
+	#plt.savefig('foo.png', bbox_inches='tight')
+	plt.show()
