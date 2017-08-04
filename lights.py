@@ -67,8 +67,8 @@ class LightTracker:
         unmatched_new_lights = set(new_lights) - matched_new_lights
         for unmatched_new_light in unmatched_new_lights:
             guid = str(uuid.uuid4())
-            updated_guids[new_light] = guid
-            updated_lights.append(new_light)
+            updated_guids[unmatched_new_light] = guid
+            updated_lights.append(unmatched_new_light)
 
         self.guids = updated_guids
         self.old_lights = updated_lights
