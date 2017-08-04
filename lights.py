@@ -45,9 +45,9 @@ class LightTracker:
         updated_guids = {}
         updated_lights = []
 
-        for new_light in new_lights:
+        for old_light in self.old_lights:
             best_match = None
-            for old_light in self.old_lights:
+            for new_light in new_lights:
                 d = (new_light.x - old_light.x)**2 + (new_light.y - new_light.y)**2
                 if best_match == None or d < best_match[0]:
                     best_match = [d, old_light]
