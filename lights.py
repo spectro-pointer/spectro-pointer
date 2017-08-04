@@ -61,7 +61,7 @@ class LightTracker:
             updated_guids[new_light] = guid
             updated_lights.append(new_light)
 
-        # Add new lights
+        # Add new lights
         for new_light in new_lights:
             if new_light not in updated_lights:
                 guid = str(uuid.uuid4())
