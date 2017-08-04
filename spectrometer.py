@@ -95,7 +95,7 @@ class Spectrometer(object):
 
 	def __init__(self, ip_address, port=port, channel=0):
 		# connect timeout
-		self.timeout = 15
+		self.timeout = 120
 		# default refresh interval for scope mode
 		self.default_scope_interval = 5
 		
@@ -385,7 +385,7 @@ class Spectrometer(object):
 		return self._send_command(self.cmd_stop_sequence, self.channel)
 
 if __name__ == '__main__':
-	integration_time = 1 # [seconds]
+	integration_time = 15 # [seconds]
 
 	spectrometer = Spectrometer(ip_address, port)
 	print('Version:', spectrometer.get_version())
