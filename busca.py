@@ -106,23 +106,22 @@ class Busca:
         tracked_light = self.get_tracked_light(lights)
 
         if tracked_light == None:
-            print "No light to be tracked..."
-            return False
+            print "  The tracked light disappeared"
+            return True
 
         if tracked_light["light"]["last_seen"] > 0:
             print "Waiting for tracked light %s to come back..." % (tracked_light["guid"])
-            time.sleep(0.2)
-            return True
+            return False
 
         print "Tracking light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
 
-        is_centered = self.error_controller.center(tracked_light["light"]["x"], tracked_light["light"]["y"])
+        if not self.error_controller.center(tracked_light["light"]["x"], tracked_light["light"]["y"]):
+            return False
 
-        if is_centered:
-            print "Centered on light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
-            light_state = self.state.get(tracked_light["guid"])
-            light_state.in_tracking = False
-            light_state.tracked = True
+        print "Centered on light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
+        light_state = self.state.get(tracked_light["guid"])
+        light_state.in_tracking = False
+        light_state.tracked = True
 
         return True
 
@@ -132,29 +131,24 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, ele
             continue
 
         elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
-        elevation_controller.move_to(elevation)
 
         azimuth_controller.move_to(0)
 
         while True:
+            elevation_controller.move_to(elevation)
+
             print "@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
-            while True:
+            lights = lights_controller.get_lights()
+            if busca.get_new_light_to_track(lights) == None:
+                azimuth_controller.move_left(120)
+                continue
+
+            while not busca.center_tracked_light(lights):
                 lights = lights_controller.get_lights()
-                if busca.get_new_light_to_track(lights) == None:
-                    break
 
-                while True:
-                    lights = lights_controller.get_lights()
-                    if not busca.center_tracked_light(lights):
-                        break
-
-                elevation_controller.move_to(elevation)
-
-            old_azimuth = azimuth_controller.position()
-            azimuth_controller.move_left(120)
-            if azimuth_controller.position() < old_azimuth:
-                break
+            print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
+            exit()
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
@@ -165,5 +159,4 @@ lights_controller = xmlrpclib.ServerProxy("http://" + BUSCA_IP + ":8003")
 
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 
-while True:
-    scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps = 4)
+scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps = 4)
