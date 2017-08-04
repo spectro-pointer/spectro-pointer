@@ -44,7 +44,7 @@ class LightTracker:
     def track(self, new_lights):
         updated_guids = {}
         updated_lights = []
-        matched_new_lights = {}
+        matched_new_lights = set()
 
         # Add tracked lights
         for old_light in self.old_lights:
