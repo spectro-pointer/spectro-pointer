@@ -35,9 +35,6 @@ class LightDetector:
 
 class LightTracker:
     MAX_DISPLACEMENT = 30
-    MAX_RESIZING_FACTOR = 1.5
-    DISPLACEMENT_WEIGHT = 0.8
-    RESIZING_FACTOR_WEIGHT = 1.0 - DISPLACEMENT_WEIGHT
 
     def __init__(self):
         self.old_lights = []
@@ -70,11 +67,4 @@ class LightTracker:
     def distance(light1, light2):
         displacement = cv2.norm((light1.x, light1.y), (light2.x, light2.y))
         displacement_ratio = displacement / LightTracker.MAX_DISPLACEMENT
-
-        resizing_factor = abs(float(light2.area - light1.area) / light1.area)
-        resizing_factor_ratio = resizing_factor / LightTracker.MAX_RESIZING_FACTOR
-
-        if displacement_ratio > 1.0 or resizing_factor_ratio > 1.0:
-            return 1.0
-
-        return LightTracker.DISPLACEMENT_WEIGHT * displacement_ratio + LightTracker.RESIZING_FACTOR_WEIGHT * resizing_factor_ratio
+        return displacement_ratio
