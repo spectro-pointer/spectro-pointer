@@ -50,7 +50,7 @@ class LightTracker:
         for old_light in self.old_lights:
             best_match = None
             for new_light in new_lights:
-                d = (new_light.x - old_light.x)**2 + (new_light.y - new_light.y)**2
+                d = (new_light.x - old_light.x)**2 + (new_light.y - old_light.y)**2
                 if best_match == None or d < best_match[0]:
                     best_match = [d, new_light]
 
