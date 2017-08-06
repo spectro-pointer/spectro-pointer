@@ -1,12 +1,21 @@
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+from fractions import Fraction
+from time import sleep
 
 class Camera:
     SIZE = (640, 480)
 
     def __init__(self):
-        self.camera = PiCamera()
-        self.camera.resolution = self.SIZE
+        camera = PiCamera(resolution=self.SIZE, framerate=Fraction(10, 1))
+        camera.shutter_speed = 100000
+        camera.iso = 800
+        sleep(2)
+        camera.exposure_mode = 'off'
+        camera.awb_mode = 'off'
+        camera.awb_gains = (Fraction(299, 256), Fraction(49, 32))
+
+        self.camera = camera
         self.stream = PiRGBArray(self.camera, size = self.SIZE)
 
     def capture_frame(self):
