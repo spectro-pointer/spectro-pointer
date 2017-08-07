@@ -8,7 +8,7 @@ from camera import Camera
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class ColiController():
-    def __init__(self, camera, detector, tracker):
+    def __init__(self):
         self.camera = camera
         self.lock = threading.Lock()
 
