@@ -8,7 +8,7 @@ from lights import *
 from camera import Camera
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-class LightsController():
+class BuscaController():
     def __init__(self, camera, detector, tracker):
         self.camera = camera
         self.detector = detector
@@ -57,7 +57,7 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
-    controller = LightsController(Camera(), LightDetector(), LightTracker())
+    controller = BuscaController(Camera(), LightDetector(), LightTracker())
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
     t.daemon = True
