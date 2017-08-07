@@ -1,6 +1,6 @@
 import xmlrpclib
 import numpy as np
-from lights import *
+import cv2
 from random import randint
 
 controller = xmlrpclib.ServerProxy("http://127.0.0.1:8003")
