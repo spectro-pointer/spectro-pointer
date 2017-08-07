@@ -51,10 +51,12 @@ class LightState:
 class Busca:
     WIDTH = 640
     HEIGHT = 480
+    MIN_LIGHT_AREA = 7
 
     def __init__(self, error_controller):
         self.error_controller = error_controller
         self.state = {}
+        self.is_centered = False
 
     def update_state(self, lights):
         # Purge old state
@@ -80,6 +82,7 @@ class Busca:
         return None
 
     def get_new_light_to_track(self, lights):
+        self.is_centered = False
         self.update_state(lights)
 
         right_most_light_to_track = None
@@ -88,7 +91,8 @@ class Busca:
             light_x = light["light"]["x"]
             light_state = self.state.get(light["guid"])
 
-            if (light_x <= self.WIDTH / 2 and (not light_state.tracked) and
+            if (light_x <= self.WIDTH / 2 and light["light"]["area"] >= self.MIN_LIGHT_AREA and
+                    (not light_state.tracked) and
                     (right_most_light_to_track == None or light_x > right_most_light_to_track["light"]["x"])):
                 right_most_light_to_track = light
 
@@ -101,6 +105,7 @@ class Busca:
         return right_most_light_to_track
 
     def center_tracked_light(self, lights):
+        self.is_centered = False
         self.update_state(lights)
 
         tracked_light = self.get_tracked_light(lights)
@@ -118,8 +123,12 @@ class Busca:
         light_state = self.state.get(tracked_light["guid"])
         light_state.in_tracking = False
         light_state.tracked = True
+        self.is_centered = True
 
         return True
+
+    def is_centered(self):
+        return self.is_centered
 
 def scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps):
     for elevation_step in range(0, elevation_steps):
@@ -143,8 +152,9 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, ele
             while not busca.center_tracked_light(lights):
                 lights = lights_controller.get_lights()
 
-            print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
-            exit()
+            if busca.is_centered():
+                print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
+                exit()
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
