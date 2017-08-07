@@ -1,16 +1,10 @@
 import xmlrpclib
-import time
 import numpy as np
 from lights import *
 from random import randint
-import copy
 
 controller = xmlrpclib.ServerProxy("http://127.0.0.1:8003")
-
 state = {}
-
-tracked_lights, im_str = controller.get_lights_and_image()
-im_str = str(im_str)
 
 while True:
     tracked_lights, im_str = controller.get_lights_and_image()
@@ -43,7 +37,5 @@ while True:
 
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 
-    cv2.imshow("foo", im)
+    cv2.imshow("busca", im)
     cv2.waitKey(100)
-
-    time.sleep(0.5)
