@@ -35,7 +35,7 @@ class LightDetector:
         return lights
 
 class LightTracker:
-    MAX_DISPLACEMENT = 30
+    MAX_DISPLACEMENT = 10
 
     def __init__(self):
         self.old_lights = []
