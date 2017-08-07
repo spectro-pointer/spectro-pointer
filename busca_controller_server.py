@@ -57,7 +57,7 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
-    controller = BuscaController(Camera(), LightDetector(), LightTracker())
+    controller = BuscaController(Camera(10), LightDetector(), LightTracker())
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
     t.daemon = True

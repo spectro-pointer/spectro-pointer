@@ -6,9 +6,9 @@ from time import sleep
 class Camera:
     SIZE = (640, 480)
 
-    def __init__(self):
-        camera = PiCamera(resolution=self.SIZE, framerate=Fraction(10, 1))
-        camera.shutter_speed = 100000
+    def __init__(self, fps):
+        camera = PiCamera(resolution=self.SIZE, framerate=Fraction(fps, 1))
+        camera.shutter_speed = 1000000 / fps
         camera.iso = 800
         sleep(2)
         camera.exposure_mode = 'off'
