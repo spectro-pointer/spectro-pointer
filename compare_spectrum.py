@@ -16,7 +16,15 @@ print "vs green: %s" % cmp(capture, green)
 print "vs red: %s" % cmp(capture, red)
 print "vs blue: %s" % cmp(capture, blue)
 print "vs noise: %s" % cmp(capture, noise)
+print ""
+
 print "vs red + green: %s" % cmp(capture, np.add(red, green))
 print "vs red + blue: %s" % cmp(capture, np.add(red, blue))
 print "vs blue + noise: %s" % cmp(capture, np.add(blue, noise))
 print "vs blue + red + green: %s" % cmp(capture, np.add(np.add(blue, red), green))
+print ""
+
+print "vs normalized(red + green): %s" % cmp(capture, np.add(normalize(red), normalize(green)))
+print "vs normalized(red + blue): %s" % cmp(capture, np.add(normalize(red), normalize(blue)))
+print "vs normalized(blue + noise): %s" % cmp(capture, np.add(normalize(blue), normalize(noise)))
+print "vs normalized(blue + red + green): %s" % cmp(capture, np.add(np.add(normalize(blue), normalize(red)), normalize(green)))
