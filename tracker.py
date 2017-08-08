@@ -218,6 +218,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
 
         elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
 
+        # 5200
         azimuth_controller.move_to(17250)
 
         while True:
