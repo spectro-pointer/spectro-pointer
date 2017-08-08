@@ -14,6 +14,7 @@ class ColiController():
 
     def capture(self):
         im = self.camera.capture_frame()
+        im = im[130:300, 225:415]
         self.lock.acquire()
         self.im = im
         self.lock.release()
