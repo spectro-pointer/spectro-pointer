@@ -3,7 +3,10 @@ import xmlrpclib
 import time
 import rpyc
 import numpy as np
+import matplotlib.pyplot as plt
 from random import randint
+
+from spectrometer import Spectrometer
 
 class ErrorController:
     WIDTH = 640
@@ -135,8 +138,8 @@ class Coli:
     FIBER_Y = 77
     DX = 25
     DY = 4
-    MIN_INTENSITY = 18000
-    MAX_TRIALS = 14
+    MIN_INTENSITY = 12000
+    MAX_TRIALS = 30
 
     def __init__(self, coli_controller, elevation_controller):
         self.coli_controller = coli_controller
@@ -144,6 +147,8 @@ class Coli:
 
     def colimate(self):
         for i in range(0, self.MAX_TRIALS):
+            time.sleep(0.5)
+
             im_str = str(coli_controller.get_image())
             im = np.fromstring(im_str, dtype = np.uint8).reshape((self.HEIGHT, self.WIDTH, 3))
             im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -155,12 +160,11 @@ class Coli:
             if intensity >= self.MIN_INTENSITY:
                 return True
 
-            elevation_controller.move_to(elevation_controller.position() - 0.0005)
-            time.sleep(0.333)
+            elevation_controller.move_to(elevation_controller.position() - 0.00025)
 
         return False
 
-def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, elevation_steps):
+def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps):
     for elevation_step in range(0, elevation_steps):
         if elevation_step != 2:
             continue
@@ -174,34 +178,57 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
 
             print "@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
+            time.sleep(0.2)
             lights = lights_controller.get_lights()
             if busca.get_new_light_to_track(lights) == None:
                 azimuth_controller.move_left(120)
                 continue
 
             while not busca.center_tracked_light(lights):
+                time.sleep(0.2)
                 lights = lights_controller.get_lights()
 
             if busca.is_centered:
                 print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
+                time.sleep(5)
+
                 if coli.colimate():
-                    print "  Colimation succeeded, final coordinates: %f, %d" % (elevation_controller.position(), azimuth_controller.position())
+                    print "  Colimation succeeded, final coordinates: elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
+
+                    print "  Capturing spectrum..."
+                    wavelengths = spectrometer.get_wavelengths()
+                    wavelengths = [float(v) for v in wavelengths.split()]
+                    spectrum = spectrometer.get_spectrum()
+                    spectrum = [int(v) for v in spectrum.split()]
+                    if spectrometer.get_current_status() == 'Success':
+                        print "  The spectrum capture succeeded, showing it..."
+                        plt.plot(wavelengths, spectrum)
+                        plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
+                        plt.ylim(1000, 16500)
+                        plt.ylabel('Intensity')
+                        plt.xlabel('Wavelength')
+                        plt.show()
+                    else:
+                        print "  The spectrum capture failed"
                 else:
                     print "  Colimation failed"
-
-                exit()
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
 COLI_IP = "127.0.0.1"
+SPECTROMETER_IP = "127.0.0.1"
+SPECTROMETER_INTEGRATION_TIME = 20
 
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 lights_controller = xmlrpclib.ServerProxy("http://" + BUSCA_IP + ":8003")
 coli_controller = xmlrpclib.ServerProxy("http://" + COLI_IP + ":8002")
 
+spectrometer = Spectrometer(SPECTROMETER_IP, 1865)
+spectrometer.set_integration(SPECTROMETER_INTEGRATION_TIME * 1e6)
+
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 coli = Coli(coli_controller, elevation_controller)
 
-scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, elevation_steps = 4)
+scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps = 4)
