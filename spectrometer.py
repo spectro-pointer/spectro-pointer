@@ -28,10 +28,6 @@ from datetime import datetime
 import os.path
 import struct
 
-# server address
-ip_address = '127.0.0.1'
-port = 1865
-
 class Spectrometer(object):
 	# command constants
 	cmd_set_integration_time = "\x00\x01"
@@ -93,7 +89,7 @@ class Spectrometer(object):
 	# convenience constant for null/no parameters to a command
 	no_parameters = "\x00\x00"
 
-	def __init__(self, ip_address, port=port, channel=0):
+	def __init__(self, ip_address, port=1865, channel=0):
 		# connect timeout
 		self.timeout = 120
 		# default refresh interval for scope mode
@@ -175,7 +171,7 @@ class Spectrometer(object):
 	
 	def _send_command(self, cmd, *args):
 		if self.sock is None:
-			self.sock = self._connect_or_abort(ip_address, port)
+			self.sock = self._connect_or_abort(self.ip_address, self.port)
 		msg = self._build_command(cmd, *args)
 
 		self._socket_write_all(msg)
@@ -191,7 +187,7 @@ class Spectrometer(object):
 
 	def _send_command_n(self, cmd, *args):
 		if self.sock is None:
-			self.sock = self._connect_or_abort(ip_address, port)
+			self.sock = self._connect_or_abort(self.ip_address, self.port)
 
 		msg = self._build_command(cmd, *args)
 
@@ -385,6 +381,9 @@ class Spectrometer(object):
 		return self._send_command(self.cmd_stop_sequence, self.channel)
 
 if __name__ == '__main__':
+	ip_address = '127.0.0.1'
+	port = 1865
+
 	integration_time = 15 # [seconds]
 
 	spectrometer = Spectrometer(ip_address, port)
