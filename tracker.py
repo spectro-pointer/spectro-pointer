@@ -154,28 +154,59 @@ class Coli:
     FIBER_Y = 77
     DX = 25
     DY = 4
-    MIN_INTENSITY = 12000
-    MAX_TRIALS = 30
+    MIN_INTENSITY_ELEVATION = 30000
+    MAX_TRIALS_ELEVATION = 40
+    MIN_INTENSITY_AZIMUTH = 10000
+    MAX_TRIALS_AZIMUTH = 15
 
-    def __init__(self, coli_controller, elevation_controller):
+    def __init__(self, coli_controller, azimuth_controller, elevation_controller):
         self.coli_controller = coli_controller
+        self.azimuth_controller = azimuth_controller
         self.elevation_controller = elevation_controller
 
     def colimate(self):
-        for i in range(0, self.MAX_TRIALS):
-            time.sleep(0.5)
+        print "Starting elevation colimation at %f" % elevation_controller.position()
+
+        last_intensity = 0
+        for i in range(0, self.MAX_TRIALS_ELEVATION):
+            time.sleep(0.7)
 
             im_str = str(coli_controller.get_image())
             im = np.fromstring(im_str, dtype = np.uint8).reshape((self.HEIGHT, self.WIDTH, 3))
-            im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-            roi = im[self.FIBER_Y-self.DY:self.FIBER_Y+self.DY, self.FIBER_X-self.DX:self.FIBER_X+self.DX]
-            intensity = cv2.sumElems(roi)[0]
+            roi = im[self.FIBER_Y-self.DY:self.FIBER_Y+self.DY, 0:self.WIDTH]
+            (b, g, r) = cv2.split(roi)
+            intensity = cv2.sumElems(cv2.max(cv2.max(b, g), r))[0]
 
             print "At elevation %f, measured colimation intensity of %d" % (elevation_controller.position(), intensity)
 
-            if intensity >= self.MIN_INTENSITY:
-                return True
+            if intensity >= self.MIN_INTENSITY_ELEVATION and intensity < last_intensity:
+                print "Starting azimuth colimation at %d" % azimuth_controller.position()
 
+                for j in range(0, self.MAX_TRIALS_AZIMUTH):
+                    time.sleep(0.7)
+
+                    im_str = str(coli_controller.get_image())
+                    im = np.fromstring(im_str, dtype = np.uint8).reshape((self.HEIGHT, self.WIDTH, 3))
+                    roi = im[self.FIBER_Y-self.DY:self.FIBER_Y+self.DY, self.FIBER_X-self.DX:self.FIBER_X]
+                    (b, g, r) = cv2.split(roi)
+                    intensity_left = cv2.sumElems(cv2.max(cv2.max(b, g), r))[0]
+
+                    roi = im[self.FIBER_Y-self.DY:self.FIBER_Y+self.DY, self.FIBER_X:self.FIBER_X+self.DX]
+                    (b, g, r) = cv2.split(roi)
+                    intensity_right = cv2.sumElems(cv2.max(cv2.max(b, g), r))[0]
+
+                    print "At azimuth %d, measured colimation intensities: left %d, right %d" % (azimuth_controller.position(), intensity_left, intensity_right)
+
+                    if intensity_left >= self.MIN_INTENSITY_AZIMUTH and intensity_right >= self.MIN_INTENSITY_AZIMUTH:
+                        return True
+                    elif intensity_left >= self.MIN_INTENSITY_AZIMUTH and intensity_right < self.MIN_INTENSITY_AZIMUTH:
+                        azimuth_controller.move_left(1)
+                    else:
+                        azimuth_controller.move_right(1)
+
+                return False
+
+            last_intensity = intensity
             elevation_controller.move_to(elevation_controller.position() - 0.00025)
 
         return False
@@ -245,6 +276,6 @@ spectrometer = Spectrometer(SPECTROMETER_IP, 1865)
 spectrometer.set_integration(SPECTROMETER_INTEGRATION_TIME * 1e6)
 
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
-coli = Coli(coli_controller, elevation_controller)
+coli = Coli(coli_controller, azimuth_controller, elevation_controller)
 
 scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps = 4)
