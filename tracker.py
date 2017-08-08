@@ -12,9 +12,9 @@ class ErrorController:
     WIDTH = 640
     HEIGHT = 480
     ERROR_TOLERANCE = 1
-    P_AZIMUTH = 5 # 30 is ~4px
-    P_ELEVATION = 0.0003 # 0.0025 is ~3 px
-    MAX_MULTIPLIER = 8
+    P_AZIMUTH = 1 # 30 is ~4px
+    P_ELEVATION = 0.00025 # 0.0025 is ~3 px
+    MAX_MULTIPLIER = 50
 
     def __init__(self, azimuth_controller, elevation_controller):
         self.azimuth_controller = azimuth_controller
@@ -27,15 +27,31 @@ class ErrorController:
         if abs(error_x) <= self.ERROR_TOLERANCE and abs(error_y) <= self.ERROR_TOLERANCE:
             return True
 
+        error = abs(error_x)
         if abs(error_x) > self.ERROR_TOLERANCE:
-            delta = min(abs(error_x), self.MAX_MULTIPLIER) * self.P_AZIMUTH
+            if error <= 3:
+                p = 1
+            elif error <= 10:
+                p = self.MAX_MULTIPLIER / 2
+            else:
+                p = self.MAX_MULTIPLIER
+
+            delta = p * self.P_AZIMUTH
             if error_x <= 0:
                 self.azimuth_controller.move_left(delta)
             else:
                 self.azimuth_controller.move_right(delta)
 
-        if abs(error_y) > self.ERROR_TOLERANCE:
-            delta = min(abs(error_y), self.MAX_MULTIPLIER) * self.P_ELEVATION
+        error = abs(error_y)
+        if error > self.ERROR_TOLERANCE:
+            if error <= 3:
+                p = 1
+            elif error <= 10:
+                p = self.MAX_MULTIPLIER / 2
+            else:
+                p = self.MAX_MULTIPLIER
+
+            delta = p * self.P_ELEVATION
             if error_y <= 0:
                 elevation = elevation_controller.position() - delta
                 # TODO Check elevation range
