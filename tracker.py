@@ -1,3 +1,4 @@
+import cv2
 import xmlrpclib
 import time
 import rpyc
@@ -127,14 +128,46 @@ class Busca:
 
         return True
 
-def scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps):
+class Coli:
+    WIDTH = 190
+    HEIGHT = 170
+    FIBER_X = 75
+    FIBER_Y = 77
+    DX = 25
+    DY = 4
+    MIN_INTENSITY = 18000
+    MAX_TRIALS = 14
+
+    def __init__(self, coli_controller, elevation_controller):
+        self.coli_controller = coli_controller
+        self.elevation_controller = elevation_controller
+
+    def colimate(self):
+        for i in range(0, self.MAX_TRIALS):
+            im_str = str(coli_controller.get_image())
+            im = np.fromstring(im_str, dtype = np.uint8).reshape((self.HEIGHT, self.WIDTH, 3))
+            im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+            roi = im[self.FIBER_Y-self.DY:self.FIBER_Y+self.DY, self.FIBER_X-self.DX:self.FIBER_X+self.DX]
+            intensity = cv2.sumElems(roi)[0]
+
+            print "At elevation %f, measured colimation intensity of %d" % (elevation_controller.position(), intensity)
+
+            if intensity >= self.MIN_INTENSITY:
+                return True
+
+            elevation_controller.move_to(elevation_controller.position() - 0.0005)
+            time.sleep(0.333)
+
+        return False
+
+def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, elevation_steps):
     for elevation_step in range(0, elevation_steps):
         if elevation_step != 2:
             continue
 
         elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
 
-        azimuth_controller.move_to(0)
+        azimuth_controller.move_to(17250)
 
         while True:
             elevation_controller.move_to(elevation)
@@ -151,15 +184,24 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, ele
 
             if busca.is_centered:
                 print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
+
+                if coli.colimate():
+                    print "  Colimation succeeded, final coordinates: %f, %d" % (elevation_controller.position(), azimuth_controller.position())
+                else:
+                    print "  Colimation failed"
+
                 exit()
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
+COLI_IP = "127.0.0.1"
 
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 lights_controller = xmlrpclib.ServerProxy("http://" + BUSCA_IP + ":8003")
+coli_controller = xmlrpclib.ServerProxy("http://" + COLI_IP + ":8002")
 
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
+coli = Coli(coli_controller, elevation_controller)
 
-scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps = 4)
+scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, elevation_steps = 4)
