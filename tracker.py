@@ -127,9 +127,6 @@ class Busca:
 
         return True
 
-    def is_centered(self):
-        return self.is_centered
-
 def scan(azimuth_controller, elevation_controller, lights_controller, busca, elevation_steps):
     for elevation_step in range(0, elevation_steps):
         if elevation_step != 2:
@@ -152,7 +149,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, ele
             while not busca.center_tracked_light(lights):
                 lights = lights_controller.get_lights()
 
-            if busca.is_centered():
+            if busca.is_centered:
                 print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
                 exit()
 
