@@ -10,9 +10,13 @@ def normalize(spectrum):
   return (spectrum - np.mean(spectrum)) / np.std(spectrum)
 
 def cmp(capture, reference):
-  return np.max(np.correlate(normalize(capture)/len(capture), normalize(reference)))
+  return np.correlate(normalize(capture), normalize(reference))[0] / len(capture)
 
-print "vs green: %f" % cmp(capture, green)
-print "vs red: %f" % cmp(capture, red)
-print "vs blue: %f" % cmp(capture, blue)
-print "vs noise: %f" % cmp(capture, noise)
+print "vs green: %s" % cmp(capture, green)
+print "vs red: %s" % cmp(capture, red)
+print "vs blue: %s" % cmp(capture, blue)
+print "vs noise: %s" % cmp(capture, noise)
+print "vs red + green: %s" % cmp(capture, np.add(red, green))
+print "vs red + blue: %s" % cmp(capture, np.add(red, blue))
+print "vs blue + noise: %s" % cmp(capture, np.add(blue, noise))
+print "vs blue + red + green: %s" % cmp(capture, np.add(np.add(blue, red), green))
