@@ -153,7 +153,7 @@ class Coli:
     DX = 25
     DY = 4
     MIN_INTENSITY_ELEVATION = 30000
-    MAX_TRIALS_ELEVATION = 40
+    MAX_TRIALS_ELEVATION = 60
     MIN_INTENSITY_AZIMUTH = 10000
     MAX_TRIALS_AZIMUTH = 15
 
@@ -217,7 +217,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
         elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
 
         # 5200
-        azimuth_controller.move_to(17250)
+        azimuth_controller.move_to(2700)
 
         while True:
             elevation_controller.move_to(elevation)
