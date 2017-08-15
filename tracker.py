@@ -2,9 +2,11 @@ import cv2
 import xmlrpclib
 import time
 import rpyc
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from random import randint
+from datetime import datetime
 
 from spectrometer import Spectrometer
 
@@ -76,7 +78,6 @@ class Busca:
     def __init__(self, error_controller):
         self.error_controller = error_controller
         self.state = {}
-        self.is_centered = False
 
     def update_state(self, lights):
         # Purge old state
@@ -102,7 +103,6 @@ class Busca:
         return None
 
     def get_new_light_to_track(self, lights):
-        self.is_centered = False
         self.update_state(lights)
 
         right_most_light_to_track = None
@@ -125,27 +125,25 @@ class Busca:
         return right_most_light_to_track
 
     def center_tracked_light(self, lights):
-        self.is_centered = False
         self.update_state(lights)
 
         tracked_light = self.get_tracked_light(lights)
 
         if tracked_light == None:
             print "  The tracked light disappeared"
-            return True
+            return False, False
 
         print "Tracking light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
 
         if not self.error_controller.center(tracked_light["light"]["x"], tracked_light["light"]["y"]):
-            return False
+            return True, False
 
         print "Centered on light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
         light_state = self.state.get(tracked_light["guid"])
         light_state.in_tracking = False
         light_state.tracked = True
-        self.is_centered = True
 
-        return True
+        return False, True
 
 class Coli:
     WIDTH = 190
@@ -198,18 +196,18 @@ class Coli:
                     print "At azimuth %d, measured colimation intensities: left %d, right %d" % (azimuth_controller.position(), intensity_left, intensity_right)
 
                     if intensity_left >= self.MIN_INTENSITY_AZIMUTH and intensity_right >= self.MIN_INTENSITY_AZIMUTH:
-                        return True
+                        return True, im
                     elif intensity_left >= self.MIN_INTENSITY_AZIMUTH and intensity_right < self.MIN_INTENSITY_AZIMUTH:
                         azimuth_controller.move_left(1)
                     else:
                         azimuth_controller.move_right(1)
 
-                return False
+                return False, im
 
             last_intensity = intensity
             elevation_controller.move_to(elevation_controller.position() - 0.00025)
 
-        return False
+        return False, im
 
 def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps):
     for elevation_step in range(0, elevation_steps):
@@ -232,16 +230,26 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
                 azimuth_controller.move_left(120)
                 continue
 
-            while not busca.center_tracked_light(lights):
+            while True:
+                is_tracking, is_centered = busca.center_tracked_light(lights)
+                if not is_tracking:
+                    break
                 time.sleep(0.2)
                 lights = lights_controller.get_lights()
 
-            if busca.is_centered:
+            if is_centered:
+                _, im_busca = lights_controller.get_lights_and_image()
+                im_busca = str(im_busca)
+                im_busca = np.fromstring(im_busca, dtype = np.uint8).reshape((480, 640, 3))
+                pos_busca = elevation_controller.position(), azimuth_controller.position()
+
                 print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
-                time.sleep(5)
+                time.sleep(1)
 
-                if coli.colimate():
+                is_colimated, im_coli = coli.colimate()
+                if is_colimated:
+                    pos_coli = elevation_controller.position(), azimuth_controller.position()
                     print "  Colimation succeeded, final coordinates: elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
                     print "  Capturing spectrum..."
@@ -250,13 +258,39 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
                     spectrum = spectrometer.get_spectrum()
                     spectrum = [int(v) for v in spectrum.split()]
                     if spectrometer.get_current_status() == 'Success':
-                        print "  The spectrum capture succeeded, showing it..."
+                        print "  The spectrum capture succeeded, saving it..."
+
+                        captures_folder = 'captures'
+                        timestamp = datetime.utcnow()
+                        current_capture_folder = "%s" % timestamp
+                        folder = os.path.join(captures_folder, current_capture_folder)
+                        os.makedirs(folder)
+
+                        with open(os.path.join(folder, "utc_time.txt"), "w") as text_file:
+                            text_file.write("%s" % timestamp)
+
+                        with open(os.path.join(folder, "busca_positions.txt"), "w") as text_file:
+                            text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
+
+                        cv2.imwrite(os.path.join(folder, "busca.png"), im_busca)
+                        with open(os.path.join(folder, "busca_positions.txt"), "w") as text_file:
+                            text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
+
+                        cv2.imwrite(os.path.join(folder, "coli.png"), im_coli)
+                        with open(os.path.join(folder, "coli_positions.txt"), "w") as text_file:
+                            text_file.write("Elevation: %f Azimuth: %d" % (pos_coli[0], pos_coli[1]))
+
                         plt.plot(wavelengths, spectrum)
                         plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
                         plt.ylim(1000, 16500)
                         plt.ylabel('Intensity')
                         plt.xlabel('Wavelength')
-                        plt.show()
+                        plt.savefig(os.path.join(folder, "spectrum.png"), bbox_inches='tight')
+                        plt.close()
+
+                        with open(os.path.join(folder, "spectrum.txt"), "w") as text_file:
+                            for i in range(len(wavelengths)):
+                                text_file.write("%f %f\n" % (wavelengths[i], spectrum[i]))
                     else:
                         print "  The spectrum capture failed"
                 else:
