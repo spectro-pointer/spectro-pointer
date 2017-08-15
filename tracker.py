@@ -154,7 +154,7 @@ class Coli:
     DY = 4
     MIN_INTENSITY_ELEVATION = 30000
     MAX_TRIALS_ELEVATION = 60
-    MIN_INTENSITY_AZIMUTH = 10000
+    MIN_INTENSITY_AZIMUTH = 4500
     MAX_TRIALS_AZIMUTH = 15
 
     def __init__(self, coli_controller, azimuth_controller, elevation_controller):
