@@ -130,7 +130,6 @@ class Busca:
         tracked_light = self.get_tracked_light(lights)
 
         if tracked_light == None:
-            print "  The tracked light disappeared"
             return False, False
 
         print "Tracking light %s at %d, %d" % (tracked_light["guid"], tracked_light["light"]["x"], tracked_light["light"]["y"])
@@ -237,7 +236,10 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
                 time.sleep(0.2)
                 lights = lights_controller.get_lights()
 
-            if is_centered:
+            if not is_centered:
+                print "  The tracked light disappeared"
+                azimuth_controller.move_left(120)
+            else:
                 _, im_busca = lights_controller.get_lights_and_image()
                 im_busca = str(im_busca)
                 im_busca = np.fromstring(im_busca, dtype = np.uint8).reshape((480, 640, 3))
