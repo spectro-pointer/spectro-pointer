@@ -251,6 +251,10 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
 
                 is_colimated, im_coli = coli.colimate()
                 if is_colimated:
+                    _, im_busca_colimated = lights_controller.get_lights_and_image()
+                    im_busca_colimated = str(im_busca_colimated)
+                    im_busca_colimated = np.fromstring(im_busca_colimated, dtype = np.uint8).reshape((480, 640, 3))
+
                     pos_coli = elevation_controller.position(), azimuth_controller.position()
                     print "  Colimation succeeded, final coordinates: elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
 
@@ -275,6 +279,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
                             text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
 
                         cv2.imwrite(os.path.join(folder, "busca.png"), im_busca)
+                        cv2.imwrite(os.path.join(folder, "busca_colimated.png"), im_busca_colimated)
                         with open(os.path.join(folder, "busca_positions.txt"), "w") as text_file:
                             text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
 
