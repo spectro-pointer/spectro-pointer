@@ -35,6 +35,9 @@ while True:
             color = state.get(tracked_light["guid"])
             cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
 
+    # Draw colimation point
+    cv2.circle(im, (320, 249), 5, (0, 0, 255), 2)
+
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 
     cv2.imshow("busca", im)
