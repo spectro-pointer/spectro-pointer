@@ -23,4 +23,4 @@ class Camera:
         return self._stream
 
     def capture_sequence(self, callback):
-        self.camera.capture_sequence(callback(), format = 'bgr', use_video_port = True)
+        self._camera.capture_sequence(callback(), format = 'bgr', use_video_port = True)
