@@ -46,8 +46,13 @@ class BuscaController():
 
 def track_lights(controller):
     print "Starting light tracker loop..."
-    while True:
+    a = time.time()
+    for i in range(100):
         controller.capture_and_track()
+    b = time.time()
+
+    diff = b - a
+    print "Captured %d frames %f seconds. FPS = %f" % (i, diff, i/diff)
 
 def serve_requests(controller):
     print "Initializing the XML-RPC server..."
