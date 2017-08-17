@@ -12,7 +12,7 @@ class AzimuthController:
     LEFT_DIRECTION = True
     RIGHT_DIRECTION = not LEFT_DIRECTION
     HOMING_DIRECTION = LEFT_DIRECTION
-    BACKLASH_STEPS = 24
+    BACKLASH_STEPS = 12
 
     def __init__(self):
         GPIO.setup(self.HOME_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)

@@ -12,7 +12,7 @@ class ElevationController:
     GEAR_RATIO = 48
     DOWN_DIRECTION = True
     UP_DIRECTION = not DOWN_DIRECTION
-    BACKLASH_STEPS = 24
+    BACKLASH_STEPS = 12
 
     def __init__(self):
         GPIO.setup(self.HOME_DOWN_GPIO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
