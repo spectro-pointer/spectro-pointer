@@ -15,13 +15,15 @@ class Camera:
         camera.awb_mode = 'off'
         camera.awb_gains = (Fraction(299, 256), Fraction(49, 32))
 
-        self.camera = camera
-        self.stream = PiRGBArray(self.camera, size = self.SIZE)
+        self._camera = camera
+        self._stream = PiRGBArray(self._camera, size = self.SIZE)
 
-    def capture_frame(self):
-        self.stream.seek(0)
-        self.stream.truncate()
+    def stream(self):
+        self._stream.truncate(0)
+        return self._stream
 
-        self.camera.capture(self.stream, format = 'bgr', use_video_port = True)
+    def image(self):
+        return self._stream.array
 
-        return self.stream.array
+    def capture_sequence(self, streams):
+        self._camera.capture_sequence(streams, format = 'bgr', use_video_port = True)

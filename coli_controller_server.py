@@ -8,12 +8,10 @@ from camera import Camera
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class ColiController():
-    def __init__(self, camera):
-        self.camera = camera
+    def __init__(self):
         self.lock = threading.Lock()
 
-    def capture(self):
-        im = self.camera.capture_frame()
+    def capture(self, im):
         im = im[130:300, 225:415]
         self.lock.acquire()
         self.im = im
@@ -28,10 +26,11 @@ class ColiController():
 
         return result
 
-def capture_frames(controller):
+def capture_frames(camera, controller):
     print "Starting the frame capture loop..."
     while True:
-        controller.capture()
+        yield camera.stream()
+        controller.capture(camera.image())
 
 def serve_requests(controller):
     print "Initializing the XML-RPC server..."
@@ -41,10 +40,11 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
-    controller = ColiController(Camera(3))
+    controller = ColiController()
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
     t.daemon = True
     t.start()
 
-    capture_frames(controller)
+    camera = Camera(3)
+    camera.capture_sequence(capture_frames(camera, controller)) 
