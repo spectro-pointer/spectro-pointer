@@ -3,20 +3,20 @@ import copy
 import threading
 import time
 import xmlrpclib
+import io
+import threading
 
 from lights import *
 from camera import Camera
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 class BuscaController():
-    def __init__(self, camera, detector, tracker):
-        self.camera = camera
+    def __init__(self, detector, tracker):
         self.detector = detector
         self.tracker = tracker
         self.lock = threading.Lock()
 
-    def capture_and_track(self):
-        im = self.camera.capture_frame()
+    def track(self, im):
         lights = self.detector.detect(im)
 
         self.lock.acquire()
@@ -44,13 +44,19 @@ class BuscaController():
 
         return result
 
-def track_lights(controller):
+def track_lights(camera, controller):
     print "Starting light tracker loop..."
+    stream = io.BytesIO()
     a = time.time()
-    for i in range(100):
-        controller.capture_and_track()
+    camera.capture_sequence(
+        (lambda:
+            for i in range(100):
+                yield camera.stream()
+        )
+    )
     b = time.time()
 
+    i = 99
     diff = b - a
     print "Captured %d frames %f seconds. FPS = %f" % (i, diff, i/diff)
 
@@ -62,10 +68,10 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
-    controller = BuscaController(Camera(10), LightDetector(), LightTracker())
+    controller = BuscaController(LightDetector(), LightTracker())
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
     t.daemon = True
     t.start()
 
-    track_lights(controller)
+    track_lights(Camera(10), controller)
