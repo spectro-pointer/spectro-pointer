@@ -40,7 +40,7 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
-    controller = ColiController(Camera(3))
+    controller = ColiController()
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
     t.daemon = True
