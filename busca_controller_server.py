@@ -44,13 +44,17 @@ class BuscaController():
 
         return result
 
+def streams(stream):
+    for i in range(100):
+        yield stream
+
 def track_lights(camera, controller):
     print "Starting light tracker loop..."
 
     stream = io.BytesIO()
 
     a = time.time()
-    camera.capture_sequence(lambda: (yield camera.stream()) for _ in range(100)) 
+    camera.capture_sequence(streams(stream)) 
     b = time.time()
 
     i = 99
