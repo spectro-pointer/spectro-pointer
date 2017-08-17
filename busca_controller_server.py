@@ -45,6 +45,7 @@ class BuscaController():
         return result
 
 def track_lights(camera, controller):
+    print "Starting light tracker loop..."
     while True:
         yield camera.stream()
         controller.track(camera.image())
