@@ -44,7 +44,7 @@ class BuscaController():
 
         return result
 
-def streams(camera, stream, controller):
+def streams(camera, controller):
     for i in range(100):
         yield camera.stream()
         controller.track(camera._stream.array)
