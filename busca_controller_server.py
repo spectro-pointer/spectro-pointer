@@ -62,4 +62,5 @@ if __name__ == '__main__':
     t.daemon = True
     t.start()
 
-    camera.capture_sequence(track_lights(Camera(10), controller)) 
+    camera = Camera(10)
+    camera.capture_sequence(track_lights(camera, controller)) 
