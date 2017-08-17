@@ -22,5 +22,8 @@ class Camera:
         self._stream.truncate(0)
         return self._stream
 
+    def image(self):
+        return self._stream.array
+
     def capture_sequence(self, streams):
         self._camera.capture_sequence(streams, format = 'bgr', use_video_port = True)

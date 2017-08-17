@@ -44,21 +44,9 @@ class BuscaController():
 
         return result
 
-def streams(camera, controller):
-    for i in range(100):
-        yield camera.stream()
-        controller.track(camera._stream.array)
-
 def track_lights(camera, controller):
-    print "Starting light tracker loop..."
-
-    a = time.time()
-    camera.capture_sequence(streams(camera, controller)) 
-    b = time.time()
-
-    i = 99
-    diff = b - a
-    print "Captured %d frames %f seconds. FPS = %f" % (i, diff, i/diff)
+    yield camera.stream()
+    controller.track(camera.image())
 
 def serve_requests(controller):
     print "Initializing the XML-RPC server..."
@@ -74,4 +62,4 @@ if __name__ == '__main__':
     t.daemon = True
     t.start()
 
-    track_lights(Camera(10), controller)
+    camera.capture_sequence(track_lights(Camera(10), controller)) 
