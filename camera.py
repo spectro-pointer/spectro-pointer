@@ -16,7 +16,7 @@ class Camera:
         camera.awb_gains = (Fraction(299, 256), Fraction(49, 32))
 
         self._camera = camera
-        self._stream = PiRGBArray(self.camera, size = self.SIZE)
+        self._stream = PiRGBArray(self._camera, size = self.SIZE)
 
     def stream(self):
         self._stream.truncate(0)
