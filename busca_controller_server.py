@@ -45,8 +45,9 @@ class BuscaController():
         return result
 
 def track_lights(camera, controller):
-    yield camera.stream()
-    controller.track(camera.image())
+    while True:
+        yield camera.stream()
+        controller.track(camera.image())
 
 def serve_requests(controller):
     print "Initializing the XML-RPC server..."
