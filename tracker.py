@@ -262,7 +262,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
                     wavelengths = spectrometer.get_wavelengths()
                     wavelengths = [float(v) for v in wavelengths.split()]
                     spectrum = spectrometer.get_spectrum()
-                    spectrum = [int(v) for v in spectrum.split()]
+                    spectrum = [float(v) for v in spectrum.split()]
                     if spectrometer.get_current_status() == 'Success':
                         print "  The spectrum capture succeeded, saving it..."
 
@@ -289,7 +289,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
 
                         plt.plot(wavelengths, spectrum)
                         plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
-                        plt.ylim(1000, 16500)
+                        plt.ylim(0, 2**16)
                         plt.ylabel('Intensity')
                         plt.xlabel('Wavelength')
                         plt.savefig(os.path.join(folder, "spectrum.png"), bbox_inches='tight')

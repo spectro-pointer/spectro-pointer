@@ -384,7 +384,7 @@ if __name__ == '__main__':
 	ip_address = '127.0.0.1'
 	port = 1865
 
-	integration_time = 15 # [seconds]
+	integration_time = 1.0 # [seconds]
 
 	spectrometer = Spectrometer(ip_address, port)
 	print('Version:', spectrometer.get_version())
@@ -398,14 +398,14 @@ if __name__ == '__main__':
 	print('Getting spectrum...')
 	print('Spectrum:')
 	spectrum = spectrometer.get_spectrum()
-	spectrum = [int(v) for v in spectrum.split()]
+	spectrum = [float(v) for v in spectrum.split()]
 
 	print('done.\nCurrent status:', spectrometer.get_current_status())
 
 	import matplotlib.pyplot as plt
 	plt.plot(wavelengths, spectrum)
 	plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
-	plt.ylim(1000, 16500)
+	plt.ylim(0, 2**16)
 	plt.ylabel('Intensity')
 	plt.xlabel('Wavelength')
 	#plt.savefig('foo.png', bbox_inches='tight')
