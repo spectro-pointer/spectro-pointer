@@ -12,7 +12,7 @@ class ColiController():
         self.lock = threading.Lock()
 
     def capture(self, im):
-        im = im[130:300, 225:415]
+        im = im[100:387, 185:443]
         self.lock.acquire()
         self.im = im
         self.lock.release()
