@@ -36,7 +36,7 @@ while True:
             cv2.circle(im, (light["x"], light["y"]), 15, color, 3)
 
     # Draw colimation point
-    cv2.circle(im, (320, 249), 5, (0, 0, 255), 2)
+    cv2.circle(im, (320, 240), 5, (0, 0, 255), 2)
 
     print "Showing " + str(len(state)) + " lights, " + str(new_lights) + " of which are new"
 
