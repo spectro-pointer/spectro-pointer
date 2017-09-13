@@ -13,6 +13,7 @@ class ColiController():
 
     def capture(self, im):
         im = im[100:387, 185:443]
+        im = cv2.flip(im, 0)
         self.lock.acquire()
         self.im = im
         self.lock.release()
