@@ -43,18 +43,30 @@ elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 
 getch = _Getch()
+
+elevation_step = 0.00015
+azimuth_step = 1
+
 while True:
   c = getch()
-  if c == 'w':
-    p = elevation_controller.position() - 0.00015
+
+  if c in ['w', 'a', 's', 'd']:
+    f = 100
+  elif c in ['t', 'f', 'g', 'h']:
+    f = 10
+  else:
+    f = 1
+
+  if c in ['w', 't', 'i']:
+    p = elevation_controller.position() - f*0.00015
     elevation_controller.move_to(p)
-  elif c == 's':
-    p = elevation_controller.position() + 0.00015
+  elif c in ['s', 'g', 'k']:
+    p = elevation_controller.position() + f*0.00015
     elevation_controller.move_to(p)
-  elif c == 'a':
-    azimuth_controller.move_left(5)
-  elif c == 'd':
-    azimuth_controller.move_right(5)
+  elif c in ['a', 'f', 'j']:
+    azimuth_controller.move_left(f*azimuth_step)
+  elif c in ['d', 'h', 'l']:
+    azimuth_controller.move_right(f*azimuth_step)
   else:
     print 'Unknown command!'
     exit()
