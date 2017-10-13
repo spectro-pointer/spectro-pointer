@@ -21,17 +21,17 @@ class BuscaController():
         self.lock.acquire()
         self.im = im
         self.lights = lights
-        old_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
+#        old_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
         self.tracker.track(lights)
-        new_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
+ #       new_guids = [tracked_light["guid"] for tracked_light in self.tracker.state()]
         self.lock.release()
 
-        new_lights = len(set(new_guids) - set(old_guids))
-        print "Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " are new"
+        #new_lights = len(set(new_guids) - set(old_guids))
+  #      print("Tracked a new frame with " + str(len(new_guids)) + " lights, out of which " + str(new_lights) + " are new")
 
     def get_lights_and_image(self):
         self.lock.acquire()
-        result = (copy.deepcopy(self.tracker.state()), xmlrpclib.Binary(self.im.tostring()))
+        result = (self.lights, xmlrpclib.Binary(self.im.tostring()))
         self.lock.release()
 
         return result
@@ -57,6 +57,7 @@ def serve_requests(controller):
     server.serve_forever()
 
 if __name__ == '__main__':
+    #controller = BuscaController(LightDetector())
     controller = BuscaController(LightDetector(), LightTracker())
 
     t = threading.Thread(target = serve_requests, args = (controller, ))
