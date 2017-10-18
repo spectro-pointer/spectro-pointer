@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from random import randint
 from datetime import datetime
+import centrador_test as centrador
 
 from spectrometer import Spectrometer
 
@@ -162,7 +163,7 @@ class Positions:
 class Position:
     'A position of the spectro-pointer. Includes the Azimuth and Elevation angles. Contains all of the lights found at the position'
     
-    def __init__(self, azimuth, elevation):
+    def __init__(self, elevation, azimuth):
         self.azimuth = azimuth
         self.elevation = elevation
         
@@ -177,6 +178,10 @@ class Position:
     
     def getElevation(self):
         return self.elevation
+	
+	def visitLights(self, elevation_controller, azimuth_controller):
+		for light in self.lights:
+			light.center(elevation_controller, azimuth_controller)
         
 class Light:
     def __init__(self, x, y, area):
@@ -188,6 +193,9 @@ class Light:
         self.azimuth = azimuth
         self.elevation = elevation
         
+	def center(self, elevation_controller, azimuth_controller):
+		centrador.centrador(elevation_controller, azimuth_controller, self.x, self.y)
+		
     def takeCollimation(self):
         print("hello")
         
@@ -254,6 +262,7 @@ class Coli:
             elevation_controller.move_to(elevation_controller.position() - 0.00025)
 
         return False, im
+		
 def background(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, azimuthRange, elevationRange):
     positions = Positions(len(azimuthRange), len(elevationRange))
     for elevation in elevationRange:
@@ -261,15 +270,12 @@ def background(azimuth_controller, elevation_controller, lights_controller, busc
         for angle in azimuthRange:
             azimuth_controller.move_to(angle)
             print("Elevation: %f & azimuth %d" % (elevation_controller.postion(), azimuth_controller.position()))
-            
             time.sleep(0.2)
-            newPosition = Position(azimuth_controller.position(), elevation_controller.postion())
+            newPosition = Position(elevation_controller.position(), azimuth_controller.postion())
             newPosition.findLights(lights_controller)
+			newPosition.visitLights(elevation_controller, azimuth_controller)
             positions.addPosition(newPosition)
-            
-            
-    
-    
+           
 def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps):
     for elevation_step in range(0, elevation_steps):
         if elevation_step != 2:
