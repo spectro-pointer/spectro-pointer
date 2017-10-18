@@ -383,4 +383,9 @@ spectrometer.set_integration(SPECTROMETER_INTEGRATION_TIME * 1e6)
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 coli = Coli(coli_controller, azimuth_controller, elevation_controller)
 
-scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps = 4)
+elevation_range = [0, 0.5, 1]
+azimuth_range = [0, 2400, 4800, 7200, 9600, 12000, 14400, 16800]
+
+background(azimuth_controller, elevation_controller, lights_controller, busca, 
+           coli, spectrometer, azimuth_range, elevation_range)
+#scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps = 4)
