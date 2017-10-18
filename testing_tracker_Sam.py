@@ -155,49 +155,72 @@ class Positions:
     'A collection of positions. A position will store the collection of lights found at one position'
     
     def __init__(self, numAzimuthPositions, numElevationPositions):
-        self.positions = np.empty([numAzimuthPositions, numElevationPositions])
+		print "Positions initialized"
+		self.positions = []
         
     def addPosition(self, newPosition):
-        self.positions[newPosition.getAzimuth() / 2400, newPosition.getElevation() * 2] = newPosition
+		self.positions.append(newPosition)
         
 class Position:
     'A position of the spectro-pointer. Includes the Azimuth and Elevation angles. Contains all of the lights found at the position'
     
-    def __init__(self, elevation, azimuth):
+    def __init__(self, elevation, azimuth, elevationID, azimuthID):
         self.azimuth = azimuth
         self.elevation = elevation
+        self.elevationID = elevationID
+        self.azimuthID = azimuthID
         
     def findLights(self, lightsController):
         detectedLights = lights_controller.get_lights()
-        self.lights = np.empty(len(detectedLights))
+        self.lights = []
         for i in range(0, len(detectedLights)):
-            self.lights[i] = Light(detectedLights[i].light.x, detectedLights[i].light.y, detectedLights[i].light.area)
-        
+            self.lights.append(Light(detectedLights[i]["light"]["x"], detectedLights[i]["light"]["y"], self.azimuth, self.elevation, detectedLights[i]["light"]["area"]))
+            
     def getAzimuth(self):
         return self.azimuth
     
     def getElevation(self):
         return self.elevation
-	
-	def visitLights(self, elevation_controller, azimuth_controller):
-		for light in self.lights:
-			light.center(elevation_controller, azimuth_controller)
-        
+    
+    def getAzimuthID(self):
+        return self.azimuthID
+    
+    def getElevationID(self):
+        return self.elevationID
+    
+    def visitLights(self, elevation_controller, azimuth_controller):
+        for light in self.lights:
+            light.center(elevation_controller, azimuth_controller)
+            
+    def printLights(self):
+        for light in self.lights:
+            print "Light Position: X: " + str(light.getX()) + " Y: " + str(light.getY())
 class Light:
-    def __init__(self, x, y, area):
+    'Light'
+    def __init__(self, x, y, position_azimuth, position_elevation, area):
         self.x = x
         self.y = y
         self.area = area
+        self.azimuth, self.elevation = centrador.pixel2Absolute(x, y, position_azimuth, position_elevation)
+        
         
     def setAbsolutePosition(self, azimuth, elevation):
         self.azimuth = azimuth
         self.elevation = elevation
         
-	def center(self, elevation_controller, azimuth_controller):
-		centrador.centrador(elevation_controller, azimuth_controller, self.x, self.y)
-		
+    def center(self, elevation_controller, azimuth_controller):
+        elevation_controller.move_to(self.elevation)
+        azimuth_controller.move_to(self.azimuth)
+        print "light at:\nElevation: " + str(self.elevation) + " Azimuth: " + str(self.azimuth) + " Visited."
+        
     def takeCollimation(self):
         print("hello")
+    
+    def getX(self):
+        return self.x
+        
+    def getY(self):
+        return self.y
         
 class Coli:
     WIDTH = 190
@@ -262,115 +285,28 @@ class Coli:
             elevation_controller.move_to(elevation_controller.position() - 0.00025)
 
         return False, im
-		
+        
 def background(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, azimuthRange, elevationRange):
     positions = Positions(len(azimuthRange), len(elevationRange))
+    elevationID = 0
+    azimuthID = 0
     for elevation in elevationRange:
-        elevation_controller.move_to(elevation)
         for angle in azimuthRange:
-            azimuth_controller.move_to(angle)
-            print("Elevation: %f & azimuth %d" % (elevation_controller.postion(), azimuth_controller.position()))
-            time.sleep(0.2)
-            newPosition = Position(elevation_controller.position(), azimuth_controller.postion())
-            newPosition.findLights(lights_controller)
-			newPosition.visitLights(elevation_controller, azimuth_controller)
-            positions.addPosition(newPosition)
-           
-def scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps):
-    for elevation_step in range(0, elevation_steps):
-        if elevation_step != 2:
-            continue
-
-        elevation = elevation_step*(1.0 / elevation_steps) + (1.0 / elevation_steps) / 2.0
-
-        # 5200
-        azimuth_controller.move_to(2700)
-
-        while True:
             elevation_controller.move_to(elevation)
-
+            azimuth_controller.move_to(angle)
             print "@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
-
             time.sleep(0.2)
-            lights = lights_controller.get_lights()
-            print(lights[0].light)
-            if busca.get_new_light_to_track(lights) == None:
-                azimuth_controller.move_left(120)
-                continue
+            newPosition = Position(elevation_controller.position(), azimuth_controller.position(), elevationID, azimuthID)
+            print "Position Created"
+            newPosition.findLights(lights_controller)
+            newPosition.printLights()
+            newPosition.visitLights(elevation_controller, azimuth_controller)
+            positions.addPosition(newPosition)
+            azimuthID += 1
+	    elevationID += 1
+		
+	
 
-            while True:
-                is_tracking, is_centered = busca.center_tracked_light(lights)
-                if not is_tracking:
-                    break
-                time.sleep(0.2)
-                lights = lights_controller.get_lights()
-
-            if not is_centered:
-                print "  The tracked light disappeared"
-                azimuth_controller.move_left(120)
-            else:
-                _, im_busca = lights_controller.get_lights_and_image()
-                im_busca = str(im_busca)
-                im_busca = np.fromstring(im_busca, dtype = np.uint8).reshape((480, 640, 3))
-                pos_busca = elevation_controller.position(), azimuth_controller.position()
-
-                print "  Final elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
-
-                time.sleep(1)
-
-                is_colimated, im_coli = coli.colimate()
-                if is_colimated:
-                    _, im_busca_colimated = lights_controller.get_lights_and_image()
-                    im_busca_colimated = str(im_busca_colimated)
-                    im_busca_colimated = np.fromstring(im_busca_colimated, dtype = np.uint8).reshape((480, 640, 3))
-
-                    pos_coli = elevation_controller.position(), azimuth_controller.position()
-                    print "  Colimation succeeded, final coordinates: elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
-
-                    print "  Capturing spectrum..."
-                    wavelengths = spectrometer.get_wavelengths()
-                    wavelengths = [float(v) for v in wavelengths.split()]
-                    spectrum = spectrometer.get_spectrum()
-                    spectrum = [float(v) for v in spectrum.split()]
-                    if spectrometer.get_current_status() == 'Success':
-                        print "  The spectrum capture succeeded, saving it..."
-
-                        captures_folder = 'captures'
-                        timestamp = datetime.utcnow()
-                        current_capture_folder = "%s" % timestamp
-                        folder = os.path.join(captures_folder, current_capture_folder)
-                        os.makedirs(folder)
-
-                        with open(os.path.join(folder, "utc_time.txt"), "w") as text_file:
-                            text_file.write("%s" % timestamp)
-
-                        with open(os.path.join(folder, "busca_positions.txt"), "w") as text_file:
-                            text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
-
-                        cv2.imwrite(os.path.join(folder, "busca.png"), im_busca)
-                        cv2.imwrite(os.path.join(folder, "busca_colimated.png"), im_busca_colimated)
-                        with open(os.path.join(folder, "busca_positions.txt"), "w") as text_file:
-                            text_file.write("Elevation: %f Azimuth: %d" % (pos_busca[0], pos_busca[1]))
-
-                        cv2.imwrite(os.path.join(folder, "coli.png"), im_coli)
-                        with open(os.path.join(folder, "coli_positions.txt"), "w") as text_file:
-                            text_file.write("Elevation: %f Azimuth: %d" % (pos_coli[0], pos_coli[1]))
-
-                        plt.plot(wavelengths, spectrum)
-                        plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
-                        plt.ylim(0, 2**16)
-                        plt.ylabel('Intensity')
-                        plt.xlabel('Wavelength')
-                        plt.savefig(os.path.join(folder, "spectrum.png"), bbox_inches='tight')
-                        plt.close()
-
-                        with open(os.path.join(folder, "spectrum.txt"), "w") as text_file:
-                            for i in range(len(wavelengths)):
-                                text_file.write("%f %f\n" % (wavelengths[i], spectrum[i]))
-                    else:
-                        print "  The spectrum capture failed"
-                else:
-                    print "  Colimation failed"
 
 MOTORES_IP = "127.0.0.1"
 BUSCA_IP = "127.0.0.1"
@@ -389,9 +325,8 @@ spectrometer.set_integration(SPECTROMETER_INTEGRATION_TIME * 1e6)
 busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 coli = Coli(coli_controller, azimuth_controller, elevation_controller)
 
-elevation_range = [0, 0.5, 1]
+elevation_range = [ 0.669685, 0.5, 0.000300]
 azimuth_range = [0, 2400, 4800, 7200, 9600, 12000, 14400, 16800]
 
-background(azimuth_controller, elevation_controller, lights_controller, busca, 
-           coli, spectrometer, azimuth_range, elevation_range)
+background(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, azimuth_range, elevation_range)
 #scan(azimuth_controller, elevation_controller, lights_controller, busca, coli, spectrometer, elevation_steps = 4)

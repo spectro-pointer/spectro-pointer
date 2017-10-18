@@ -57,3 +57,38 @@ def centrador(elevation_controller, azimuth_controller, X, Y):
         print p
         elevation_controller.move_to(p)
 	return elevation_controller.position(), azimuth_controller.position()
+def pixel2Absolute(X, Y, absolute_Center_Azimuth, absolute_Center_Elevation):
+    centroX = 320 
+    centroY = 240 
+    radiuscentro = 5  # variable 
+    pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
+    if   X == centroX :
+        stepX = 0
+    elif X > centroX :
+        deltaX = X - centroX
+        stepX = abs(deltaX * pixel) 
+        stepX = "{0:.0f}".format(stepX) 
+        stepX = (-1) * int(stepX)
+    elif X < centroX :
+        deltaX = X - centroX
+        stepX = abs(deltaX * pixel)
+        stepX = "{0:.0f}".format(stepX) 
+        stepX = int(stepX)
+    if Y == centroY :
+        p = 0.000000
+    elif Y > centroY :
+        deltaY = Y - centroY
+        f = abs(deltaY * pixel)
+        # f = "{0:.0f}".format(f) 
+        f = int(f)
+        p = f*0.00015
+        
+    elif Y < centroY :
+        deltaY = Y - centroY
+        f = abs(deltaY * pixel)
+        print deltaY
+        # f = "{0:.0f}".format(f) 
+        f = int(f)
+        p = (-1) * f * 0.00015
+        
+	return (absolute_Center_Azimuth + stepX) , (absolute_Center_Elevation + p)
