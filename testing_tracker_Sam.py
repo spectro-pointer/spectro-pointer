@@ -173,8 +173,8 @@ class Position:
     def findLights(self, lightsController):
         detectedLights = lights_controller.get_lights()
         self.lights = []
-        for i in range(0, len(detectedLights)):
-            self.lights.append(Light(detectedLights[i]["light"]["x"], detectedLights[i]["light"]["y"], self.azimuth, self.elevation, detectedLights[i]["light"]["area"]))
+        for light in detectedLights:
+            self.lights.append(Light(light["light"]["x"], light["light"]["y"], self.azimuth, self.elevation, light["light"]["area"]))
             
     def getAzimuth(self):
         return self.azimuth
