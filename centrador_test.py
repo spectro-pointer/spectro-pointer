@@ -8,8 +8,8 @@ import time
 import math
 
 def centrador(elevation_controller, azimuth_controller, X, Y):
-    centroX = 320 
-    centroY = 240 
+    centroX = 316 
+    centroY = 235 
     radiuscentro = 5  # variable 
     pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
     if   X == centroX :
@@ -56,10 +56,12 @@ def centrador(elevation_controller, azimuth_controller, X, Y):
         p = elevation_controller.position() - f*0.00015
         print p
         elevation_controller.move_to(p)
-	return elevation_controller.position(), azimuth_controller.position()
+    return elevation_controller.position(), azimuth_controller.position()
+
 def pixel2Absolute(X, Y, absolute_Center_Azimuth, absolute_Center_Elevation):
-    centroX = 320 
-    centroY = 240 
+    centroX = 325 
+    centroY = 231 
+    azimuthMax = 19200
     radiuscentro = 5  # variable 
     pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
     if   X == centroX :
@@ -86,9 +88,11 @@ def pixel2Absolute(X, Y, absolute_Center_Azimuth, absolute_Center_Elevation):
     elif Y < centroY :
         deltaY = Y - centroY
         f = abs(deltaY * pixel)
-        print deltaY
         # f = "{0:.0f}".format(f) 
         f = int(f)
         p = (-1) * f * 0.00015
-        
-	return (absolute_Center_Azimuth + stepX) , (absolute_Center_Elevation + p)
+    
+    if (absolute_Center_Azimuth + stepX) < 0:
+        return [(absolute_Center_Azimuth + stepX + azimuthMax) , (absolute_Center_Elevation + p)]
+    else:
+        return [(absolute_Center_Azimuth + stepX) , (absolute_Center_Elevation + p)]

@@ -268,7 +268,7 @@ def scan(azimuth_controller, elevation_controller, lights_controller, busca, col
 
                         captures_folder = 'captures'
                         timestamp = datetime.utcnow()
-                        current_capture_folder = "%s" % timestamp
+                        current_capture_folder = ("%s" % timestamp).replace(':','-')
                         folder = os.path.join(captures_folder, current_capture_folder)
                         os.makedirs(folder)
 
