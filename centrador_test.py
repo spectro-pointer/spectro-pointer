@@ -8,10 +8,10 @@ import time
 import math
 
 def centrador(elevation_controller, azimuth_controller, X, Y):
-    centroX = 316 
-    centroY = 235 
+    centroX = 325 
+    centroY = 231 
     radiuscentro = 5  # variable 
-    pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
+    pixel = float(5.791) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
     if   X == centroX :
         print "X centrado"
     elif X > centroX :
@@ -63,7 +63,7 @@ def pixel2Absolute(X, Y, absolute_Center_Azimuth, absolute_Center_Elevation):
     centroY = 231 
     azimuthMax = 19200
     radiuscentro = 5  # variable 
-    pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
+    pixel = float(5.791) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
     if   X == centroX :
         stepX = 0
     elif X > centroX :
