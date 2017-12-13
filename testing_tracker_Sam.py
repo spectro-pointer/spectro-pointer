@@ -19,6 +19,7 @@ from spectrometer import Spectrometer
 import detector_spectroscope
 import threading
 import Queue
+import csv
 
 
 class Positions:
@@ -41,17 +42,30 @@ class Position:
         self.elevation = elevation
         self.elevationID = elevationID
         self.azimuthID = azimuthID
+        self.folder_name = os.path.join('captures', ("%s" % datetime.utcnow()).replace(':', '-'))
+    
 
     def findLights(self, lightsController):
-        print "Capturing Lights..."
+        print "Capturing Lights & Saving Picture..."
         detectedLights, im = lights_controller.get_lights_and_image()
-        savePicture(detectedLights, im)
+        savePicture(detectedLights, im, self.folder_name, "Lights_Detected")
         self.lights = []
         print detectedLights
         for light in detectedLights:
-            newLight = Light(light["x"], light["y"], self.azimuth, self.elevation, light["area"])
+            newLight = Light(light["x"], light["y"], self.azimuth, self.elevation, light["area"], self.folder_name)
             self.lights.append(newLight)
-
+        print "Saving Light Positions..."
+        self.saveLightPositions()
+            
+    def saveLightPositions(self):
+        light_position_file = self.folder_name
+        light_position_file = os.path.join(light_position_file, ("%s" % datetime.utcnow()).replace(':', '-') + '_Light_Positions.csv')
+        with open(light_position_file, 'wb') as csvFile:
+            lightWriter = csv.writer(csvFile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            lightWriter.writerow(['X-Position', 'Y-Position', 'Elevation', 'Azimuth', 'Area'])
+            for light in self.lights:
+                lightWriter.writerow([str(light.getX()), str(light.getY()), str(light.getElevation()), str(light.getAzimuth()), light.getArea()])
+            
     def getAzimuth(self):
         return self.azimuth
 
@@ -86,14 +100,18 @@ class Position:
 class Light:
     'Light - Detected light in the current position'
 
-    def __init__(self, x, y, position_azimuth, position_elevation, area):
+    def __init__(self, x, y, position_azimuth, position_elevation, area, captures_folder):
         self.x = x
         self.y = y
         self.area = area
         azi_ele = centrador.pixel2Absolute(x, y, position_azimuth, position_elevation)
         self.azimuth = azi_ele[0]
         self.elevation = azi_ele[1]
+        self.captures_folder = os.path.join(captures_folder, ("%s" % datetime.utcnow()).replace(':', '-') + "_Individual_Lights")
 
+    def getArea(self):
+        return self.area
+    
     def setAbsolutePosition(self, azimuth, elevation):
         'Set absolute position of this light'
         self.azimuth = azimuth
@@ -110,7 +128,7 @@ class Light:
         centered = False
         undetectedCounter = 0
         totalCounter = 0
-        MAX_LOOPS = 1600
+        MAX_LOOPS = 20
         UNDETECTED = 100
         while not centered:
             im_str = str(coli_controller.get_image())
@@ -125,7 +143,7 @@ class Light:
                     break
             elif (offset.find("x-center") != -1 or offset.find("y-center") != -1):
                 print 'running parallel'
-                runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer)
+                spectrum, wavelengths = self.runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer)
                 print 'finished parallel'
                 centered = True
 
@@ -142,7 +160,8 @@ class Light:
                 print "Move Down"
                 elevation_controller.move_to(elevation_controller.position() + 0.00015)
             if (totalCounter > MAX_LOOPS):
-                print 'Reached Maximum Number of Loops: ' + MAX_LOOPS
+                print 'Reached Maximum Number of Loops: ' + str(MAX_LOOPS)
+                spectrum, wavelengths = self.runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer)
                 break
             totalCounter += 1
 
@@ -160,64 +179,89 @@ class Light:
     def getAzimuth(self):
         return self.azimuth
 
-
-def coliImageTest():
-    test_light = Light(300, 300, 4500, 0.5, 250)
-    COLI_IP = "127.0.0.1"
-    coli_controller = xmlrpclib.ServerProxy("http://" + COLI_IP + ":8002")
-    test_light.collimation(coli_controller)
-
-
-def correctIntegrationTime(spectrum, saturation, integration_time, threshold):
-    MIN = min(spectrum)
-    #       MEAN = sum(spectrum)/len(spectrum)
-    # Saturation detection
-    MAX = max(spectrum)
-    if MAX >= saturation:
-        #            self._integration_time *= self._integration_factor
-        #            print 'Saturation: %d. Lowering integration time: %f' % (MAX, self._integration_time)
-        #            self._spectrometer.set_integration(self._integration_time*1e6)
-        return 'Saturated'
-    # Baseline reduction
-    spectrum = [v - MIN for v in spectrum]
-    # Detection
-    MAX -= MIN
-    if MAX > threshold:  # Detection
-        #            # Save spectrum
-        #            print 'Detection: %d' % MAX
-        #            self._save_spectrum(self._location, spectrum)
-        #            if(fig != 0):
-        #                close()
-        #            fig = self._plot_spectrum(spectrum)
-        #            numCaptures += 1
-        #            if numCaptures > MAX_NUMCAPTURES:
-        #                print 'Stop!!!'
-        #                self.stop()
-        return 'Above Threshold'
-    else:
-        #            # Increase integration time
-        #            self._integration_time /= self._integration_factor
-        #            if self._integration_time > self.MAX_INTEGRATION_TIME:
-        #                self._integration_time = self.MAX_INTEGRATION_TIME
-        #            print 'No detection: %d. Integration time: %f' % (MAX, self._integration_time)
-        #            self._spectrometer.set_integration(self._integration_time*1e6)
-        return 'Below Threshold'
-
-
-def runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer):
-    e = threading.Event()
-    queue = Queue.Queue()
-    t1 = threading.Thread(target=noSpectrumCollimation,
-                          args=(coli_controller, elevation_controller, azimuth_controller, spectrometer, e))
-    t2 = threading.Thread(target=takeSpectrometer, args=(spectrometer, e, queue))
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
-    print str(queue.qsize())
-    saveSpectrometer(queue.get(), queue.get())
-
-
+    
+    
+    def runCollimationAndTakeSpectrum(self, coli_controller, elevation_controller, azimuth_controller, spectrometer):
+        success = False
+        thresh = 50000
+        integration_time = 1 #seconds
+        factor = 1.5
+        saturation = 60000
+        while(not success):
+            e = threading.Event()
+            queue = Queue.Queue()
+            t1 = threading.Thread(target=noSpectrumCollimation,
+                                  args=(coli_controller, elevation_controller, azimuth_controller, spectrometer, e))
+            t2 = threading.Thread(target=takeSpectrometer, args=(spectrometer, e, queue, integration_time))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+            spectrum = queue.get()
+            wavelengths = queue.get()
+            self.saveSpectrometer(spectrum, wavelengths)
+            correct = correctIntegrationTime(spectrum, saturation, thresh)
+            if(correct == 'Saturated'):
+                integration_time = integration_time / factor
+            elif(correct == 'Above Threshold'):
+                success = True
+            elif(correct == 'Below Threshold'):
+                integration_time = integration_time * factor
+        return spectrum, wavelengths
+    
+    def saveSpectrometer(self, spectrum, wavelengths):
+        timestamp = datetime.utcnow()
+        current_capture_folder = ("%s" % timestamp).replace(':', '-') 
+        folder = os.path.join(self.captures_folder, current_capture_folder)
+        os.makedirs(folder)
+        plt.plot(wavelengths, spectrum)
+        plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
+        plt.ylim(0, 2 ** 16)
+        plt.ylabel('Intensity')
+        plt.xlabel('Wavelength')
+        plt.savefig(os.path.join(folder, "spectrum.png"), bbox_inches='tight')
+        plt.close()
+        with open(os.path.join(folder, "spectrum.txt"), "w") as text_file:
+            for i in range(len(wavelengths)):
+                text_file.write("%f %f\n" % (wavelengths[i], spectrum[i]))
+        detectedLights, im = lights_controller.get_lights_and_image()
+        savePicture(detectedLights, im, folder, "Coli_Capture")
+        
+def correctIntegrationTime(spectrum, saturation, threshold):
+        MIN = min(spectrum)
+        #       MEAN = sum(spectrum)/len(spectrum)
+        # Saturation detection
+        MAX = max(spectrum)
+        if MAX >= saturation:
+            #            self._integration_time *= self._integration_factor
+            #            print 'Saturation: %d. Lowering integration time: %f' % (MAX, self._integration_time)
+            #            self._spectrometer.set_integration(self._integration_time*1e6)
+            return 'Saturated'
+        # Baseline reduction
+        spectrum = [v - MIN for v in spectrum]
+        # Detection
+        MAX -= MIN
+        if MAX > threshold:  # Detection
+            #            # Save spectrum
+            #            print 'Detection: %d' % MAX
+            #            self._save_spectrum(self._location, spectrum)
+            #            if(fig != 0):
+            #                close()
+            #            fig = self._plot_spectrum(spectrum)
+            #            numCaptures += 1
+            #            if numCaptures > MAX_NUMCAPTURES:
+            #                print 'Stop!!!'
+            #                self.stop()
+            return 'Above Threshold'
+        else:
+            #            # Increase integration time
+            #            self._integration_time /= self._integration_factor
+            #            if self._integration_time > self.MAX_INTEGRATION_TIME:
+            #                self._integration_time = self.MAX_INTEGRATION_TIME
+            #            print 'No detection: %d. Integration time: %f' % (MAX, self._integration_time)
+            #            self._spectrometer.set_integration(self._integration_time*1e6)
+            return 'Below Threshold'
+        
 def noSpectrumCollimation(coli_controller, elevation_controller, azimuth_controller, spectrometer, e):
     'Uses fine motor control to center the motor on the detected light'
     centered = False
@@ -237,7 +281,7 @@ def noSpectrumCollimation(coli_controller, elevation_controller, azimuth_control
                 print "Reached Undetected Threshold"
                 break
         elif (offset.find("x-center") != -1 or offset.find("y-center") != -1):
-            print centered
+            print 'Centered?: ' + str(centered)
 
         if (offset.find("left") != -1):
             print "Move Left"
@@ -261,9 +305,9 @@ def noSpectrumCollimation(coli_controller, elevation_controller, azimuth_control
         totalCounter += 1
     print "Finished Parallel Collimation"
 
-
-def takeSpectrometer(spectrometer, e, queue):
+def takeSpectrometer(spectrometer, e, queue, integration_time):
     print "  Capturing spectrum..."
+    spectrometer.set_integration(integration_time * 1e6)
     wavelengths = spectrometer.get_wavelengths()
     wavelengths = [float(v) for v in wavelengths.split()]
     spectrum = spectrometer.get_spectrum()
@@ -272,30 +316,11 @@ def takeSpectrometer(spectrometer, e, queue):
     queue.put(spectrum)
     queue.put(wavelengths)
     return spectrum, wavelengths
-
-
-def saveSpectrometer(spectrum, wavelengths):
-    captures_folder = 'captures'
+    
+def savePicture(tracked_lights, im_str, folder_name, picture_name):
+    captures_folder = folder_name
     timestamp = datetime.utcnow()
-    current_capture_folder = ("%s" % timestamp).replace(':', '-')
-    folder = os.path.join(captures_folder, current_capture_folder)
-    os.makedirs(folder)
-    plt.plot(wavelengths, spectrum)
-    plt.xlim(wavelengths[0], wavelengths[len(wavelengths) - 1])
-    plt.ylim(0, 2 ** 16)
-    plt.ylabel('Intensity')
-    plt.xlabel('Wavelength')
-    plt.savefig(os.path.join(folder, "spectrum.png"), bbox_inches='tight')
-    plt.close()
-    with open(os.path.join(folder, "spectrum.txt"), "w") as text_file:
-        for i in range(len(wavelengths)):
-            text_file.write("%f %f\n" % (wavelengths[i], spectrum[i]))
-
-
-def savePicture(tracked_lights, im_str):
-    captures_folder = 'captures'
-    timestamp = datetime.utcnow()
-    current_capture_folder = ("%s" % timestamp).replace(':', '-')
+    current_capture_folder = ("%s" % timestamp).replace(':', '-') + picture_name
     folder = os.path.join(captures_folder, current_capture_folder)
     os.makedirs(folder)
 
