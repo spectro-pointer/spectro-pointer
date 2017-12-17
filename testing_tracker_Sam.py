@@ -187,7 +187,8 @@ class Light:
         integration_time = 1 #seconds
         factor = 1.5
         saturation = 60000
-        while(not success):
+        attemptCounter = 0
+        while(not success and attemptCounter < 7):
             e = threading.Event()
             queue = Queue.Queue()
             t1 = threading.Thread(target=noSpectrumCollimation,
@@ -203,10 +204,12 @@ class Light:
             correct = correctIntegrationTime(spectrum, saturation, thresh)
             if(correct == 'Saturated'):
                 integration_time = integration_time / factor
+                attemptCounter += 1
             elif(correct == 'Above Threshold'):
                 success = True
             elif(correct == 'Below Threshold'):
                 integration_time = integration_time * factor
+                attemptCounter += 1
         return spectrum, wavelengths
     
     def saveSpectrometer(self, spectrum, wavelengths):
