@@ -13,10 +13,10 @@ elevation_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8001")
 azimuth_controller = xmlrpclib.ServerProxy("http://" + MOTORES_IP + ":8000")
 
 
-centroX = 320 
-centroY = 240 
+centroX = 325
+centroY = 231 
 radiuscentro = 5  # variable 
-pixel = float(4.412) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
+pixel = float(5.791) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
 
 while True:
 

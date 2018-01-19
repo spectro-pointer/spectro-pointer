@@ -66,12 +66,12 @@ def pixel2Absolute(X, Y, absolute_Center_Azimuth, absolute_Center_Elevation):
     pixel = float(5.791) # esta variable es el numero de pixel que se mueven por cada paso de motor ,ver con cada cambio de resolucion de y relacion de motores
     if   X == centroX :
         stepX = 0
-    elif X > centroX :
+    elif X < centroX :
         deltaX = X - centroX
         stepX = abs(deltaX * pixel) 
         stepX = "{0:.0f}".format(stepX) 
         stepX = (-1) * int(stepX)
-    elif X < centroX :
+    elif X > centroX :
         deltaX = X - centroX
         stepX = abs(deltaX * pixel)
         stepX = "{0:.0f}".format(stepX) 

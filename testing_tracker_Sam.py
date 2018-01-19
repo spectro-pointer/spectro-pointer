@@ -27,7 +27,7 @@ class Positions:
 
     def __init__(self, numAzimuthPositions, numElevationPositions):
         self.numAzimuthPositions = numAzimuthPositions
-        print "Positions initialized"
+        print("Positions initialized")
         self.positions = []
 
     def addPosition(self, newPosition):
@@ -46,15 +46,15 @@ class Position:
     
 
     def findLights(self, lightsController):
-        print "Capturing Lights & Saving Picture..."
+        print("Capturing Lights & Saving Picture...")
         detectedLights, im = lights_controller.get_lights_and_image()
         savePicture(detectedLights, im, self.folder_name, "Lights_Detected")
         self.lights = []
-        print detectedLights
+        print(detectedLights)
         for light in detectedLights:
             newLight = Light(light["x"], light["y"], self.azimuth, self.elevation, light["area"], self.folder_name)
             self.lights.append(newLight)
-        print "Saving Light Positions..."
+        print("Saving Light Positions...")
         self.saveLightPositions()
             
     def saveLightPositions(self):
@@ -81,7 +81,7 @@ class Position:
     def visitLights(self, elevation_controller, azimuth_controller, coli_controller, spectrometer):
         'Visit the each detected light in the current position'
         for light in self.lights:
-            print "visiting light at Elevation: " + str(light.getElevation()) + " Azimuth: " + str(light.getAzimuth())
+            print("visiting light at Elevation: " + str(light.getElevation()) + " Azimuth: " + str(light.getAzimuth()))
             light.center(elevation_controller, azimuth_controller)
             # detector_spectroscope.sta
             light.collimation(coli_controller, elevation_controller, azimuth_controller, spectrometer);
@@ -89,12 +89,12 @@ class Position:
     def printAbsPositions(self):
         'Print the absolute position of this position'
         for light in self.lights:
-            print "Light Position: Elevation: " + str(light.getElevation()) + " Azimuth: " + str(light.getAzimuth())
+            print("Light Position: Elevation: " + str(light.getElevation()) + " Azimuth: " + str(light.getAzimuth()))
 
     def printLights(self):
         'Print each light and position'
         for light in self.lights:
-            print "Light Position: X: " + str(light.getX()) + " Y: " + str(light.getY())
+            print("Light Position: X: " + str(light.getX()) + " Y: " + str(light.getY()))
 
 
 class Light:
@@ -121,7 +121,7 @@ class Light:
         'Center the camera on this light'
         elevation_controller.move_to(self.elevation)
         azimuth_controller.move_to(self.azimuth)
-        print "light at:\nElevation: " + str(self.elevation) + " Azimuth: " + str(self.azimuth) + " Visited."
+        print("light at:\nElevation: " + str(self.elevation) + " Azimuth: " + str(self.azimuth) + " Visited.")
 
     def collimation(self, coli_controller, elevation_controller, azimuth_controller, spectrometer):
         'Uses fine motor control to center the motor on the detected light'
@@ -136,36 +136,36 @@ class Light:
             cx, cy = getContour(im)
             offset = check_quadrant(cx, cy)
             if (offset == ''):
-                print "No Light Detected"
+                print("No Light Detected")
                 undetectedCounter += 1
                 if (undetectedCounter > UNDETECTED):
-                    print "Reached Undetected Threshold"
+                    print("Reached Undetected Threshold")
                     break
             elif (offset.find("x-center") != -1 or offset.find("y-center") != -1):
-                print 'running parallel'
+                print('running parallel')
                 spectrum, wavelengths = self.runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer)
-                print 'finished parallel'
+                print('finished parallel')
                 centered = True
 
             if (offset.find("left") != -1):
-                print "Move Left"
+                print("Move Left")
                 azimuth_controller.move_left(1)
             elif (offset.find("right") != -1):
-                print "Move Right"
+                print("Move Right")
                 azimuth_controller.move_right(1)
             if (offset.find("up") != -1):
-                print "Move Up"
+                print("Move Up")
                 elevation_controller.move_to(elevation_controller.position() - 0.00015)
             elif (offset.find("down") != -1):
-                print "Move Down"
+                print("Move Down")
                 elevation_controller.move_to(elevation_controller.position() + 0.00015)
             if (totalCounter > MAX_LOOPS):
-                print 'Reached Maximum Number of Loops: ' + str(MAX_LOOPS)
+                print('Reached Maximum Number of Loops: ' + str(MAX_LOOPS))
                 spectrum, wavelengths = self.runCollimationAndTakeSpectrum(coli_controller, elevation_controller, azimuth_controller, spectrometer)
                 break
             totalCounter += 1
 
-        print "Finished Collimation"
+        print("Finished Collimation")
 
     def getX(self):
         return self.x
@@ -278,38 +278,38 @@ def noSpectrumCollimation(coli_controller, elevation_controller, azimuth_control
         cx, cy = getContour(im)
         offset = check_quadrant(cx, cy)
         if (offset == ''):
-            print "No Light Detected"
+            print("No Light Detected")
             undetectedCounter += 1
             if (undetectedCounter > 20):
-                print "Reached Undetected Threshold"
+                print("Reached Undetected Threshold")
                 break
         elif (offset.find("x-center") != -1 or offset.find("y-center") != -1):
-            print 'Centered?: ' + str(centered)
+            print('Centered?: ' + str(centered))
 
         if (offset.find("left") != -1):
-            print "Move Left"
+            print("Move Left")
             azimuth_controller.move_left(1)
 
         elif (offset.find("right") != -1):
-            print "Move Right"
+            print("Move Right")
             azimuth_controller.move_right(1)
 
         if (offset.find("up") != -1):
-            print "Move Up"
+            print("Move Up")
             elevation_controller.move_to(elevation_controller.position() - 0.00015)
 
         elif (offset.find("down") != -1):
-            print "Move Down"
+            print("Move Down")
             elevation_controller.move_to(elevation_controller.position() + 0.00015)
 
         if (totalCounter > MAX_LOOPS):
-            print 'Reached Maximum Number of Loops: ' + MAX_LOOPS
+            print('Reached Maximum Number of Loops: ' + MAX_LOOPS)
             break
         totalCounter += 1
-    print "Finished Parallel Collimation"
+    print("Finished Parallel Collimation")
 
 def takeSpectrometer(spectrometer, e, queue, integration_time):
-    print "  Capturing spectrum..."
+    print("  Capturing spectrum...")
     spectrometer.set_integration(integration_time * 1e6)
     wavelengths = spectrometer.get_wavelengths()
     wavelengths = [float(v) for v in wavelengths.split()]
@@ -349,14 +349,14 @@ def background(azimuth_controller, elevation_controller, lights_controller, coli
     azimuthID = 0
     for elevation in elevationRange:
         for angle in azimuthRange:
-            print "Moving to Next Position"
+            print("Moving to Next Position")
             elevation_controller.move_to(elevation)
             azimuth_controller.move_to(angle)
-            print "@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position())
-            time.sleep(0.2)
+            print("@ elevation %f & azimuth %d" % (elevation_controller.position(), azimuth_controller.position()))
+            time.sleep(0.4)
             newPosition = Position(elevation_controller.position(), azimuth_controller.position(), elevationID,
                                    azimuthID)
-            print "Position Created"
+            print("Position Created")
             newPosition.findLights(lights_controller)
             newPosition.printAbsPositions()
             newPosition.visitLights(elevation_controller, azimuth_controller, coli, spectrometer)
@@ -381,7 +381,7 @@ spectrometer.set_integration(SPECTROMETER_INTEGRATION_TIME * 1e6)
 
 # busca = Busca(ErrorController(azimuth_controller, elevation_controller))
 
-elevation_range = [0.674929, 0.669685, 0.5, 0.000300]
+elevation_range = [0.674918, 0.669685, 0.5, 0.000300]
 azimuth_range = [16967, 0, 2400, 4800, 7200, 9600, 12000, 14400, 16800]
 
 background(azimuth_controller, elevation_controller, lights_controller, coli_controller, spectrometer, azimuth_range,
