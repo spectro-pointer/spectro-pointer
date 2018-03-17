@@ -26,4 +26,5 @@ class Camera:
         return self._stream.array
 
     def capture_sequence(self, streams):
+        self._camera.capture_sequence(['image%02d.jpg' % i for i in range(10)])
         self._camera.capture_sequence(streams, format = 'bgr', use_video_port = True)

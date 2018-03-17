@@ -18,3 +18,7 @@ Desktop.ini
 
 # Output
 captures/
+
+venv
+
+.idea

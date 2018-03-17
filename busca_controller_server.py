@@ -1,9 +1,6 @@
-import cv2
 import copy
 import threading
-import time
 import xmlrpclib
-import io
 
 from lights import *
 from camera import Camera
