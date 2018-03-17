@@ -18,3 +18,8 @@ Desktop.ini
 
 # Output
 captures/
+
+
+*.iml
+*.idea
+venv
